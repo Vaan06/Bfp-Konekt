@@ -1,0 +1,388 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <title>BFP Konekt Dashboard</title>
+    
+    <!-- Add Leaflet CSS and JS -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin=""/>
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
+    
+    <!-- Add Leaflet Draw plugin for radius editing -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet-draw@1.0.4/dist/leaflet.draw.css"/>
+    <script src="https://unpkg.com/leaflet-draw@1.0.4/dist/leaflet.draw.js"></script>
+    
+    <!-- Add QR Code library -->
+    <script src="https://cdn.jsdelivr.net/npm/qrcodejs@1.0.0/qrcode.min.js"></script>
+
+    <!-- Facebook SDK -->
+    <script async defer crossorigin="anonymous" src="https://connect.facebook.net/en_US/sdk.js"></script>
+    
+    <!-- NLP Libraries -->
+    <script src="https://unpkg.com/compromise"></script>
+    <script src="https://cdn.jsdelivr.net/npm/natural@6.5.0/dist/natural.min.js"></script>
+    
+    <!-- Geocoding and Location Libraries -->
+    <script src="https://cdn.jsdelivr.net/npm/turf@3.0.14/turf.min.js"></script>
+    
+    <!-- Custom FB Scraper and NLP Module -->
+    <script src="js/fb-scraper.js"></script>
+    <script src="js/nlp-processor.js"></script>
+    <script src="js/fb-scraper-config.js"></script>
+
+    <style>
+        :root {
+            /* Primary Colors */
+            --primary: #FF8C00;
+            --primary-light: #FFB84D;
+            --primary-dark: #E67A00;
+
+            /* Secondary Colors */
+            --secondary: #1A237E;
+            --secondary-light: #534BAE;
+            --secondary-dark: #000051;
+
+            /* Background Colors */
+            --bg-main: #F8F9FA;
+            --bg-light: #FFFFFF;
+            --bg-dark: #343A40;
+            --sidebar-bg: #1A1A1A;
+
+            /* Text Colors */
+            --text-dark: #333333;
+            --text-light: #FFFFFF;
+            --text-muted: #6C757D;
+
+            /* Utility Colors */
+            --shadow: rgba(0, 0, 0, 0.1);
+            --danger: #dc3545;
+            --success: #28a745;
+            --warning: #ffc107;
+            --info: #17a2b8;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Arial, sans-serif;
+        }
+
+        body {
+            display: flex;
+            background: var(--bg-main);
+            color: var(--text-dark);
+        }
+
+        /* Sidebar Styles */
+        .sidebar {
+            width: 240px;
+            background: linear-gradient(180deg, var(--primary) 0%, var(--secondary) 100%);
+            color: var(--text-light);
+            padding: 20px 0;
+            position: fixed;
+            height: 100%;
+            left: 0;
+            top: 0;
+            overflow-y: auto;
+            transition: all 0.3s;
+            z-index: 99;
+            box-shadow: 4px 0 15px var(--shadow);
+        }
+
+        .logo-container {
+            padding: 20px;
+            text-align: center;
+            background: rgba(255, 255, 255, 0.1);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+            margin-bottom: 25px;
+        }
+
+        .logo-container img {
+            width: 110px;
+            height: auto;
+            margin-bottom: 15px;
+            filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.2));
+        }
+
+        .menu-items {
+            padding: 0 15px;
+        }
+
+        .menu-item {
+            display: flex;
+            align-items: center;
+            padding: 12px 20px;
+            color: var(--text-light);
+            text-decoration: none;
+            border-radius: 10px;
+            margin-bottom: 10px;
+            transition: all 0.3s ease;
+        }
+
+        .menu-item:hover {
+            background: rgba(255, 255, 255, 0.1);
+            transform: translateX(5px);
+        }
+
+        .menu-item.active {
+            background: rgba(255, 255, 255, 0.2);
+            font-weight: 600;
+        }
+
+        .menu-item i {
+            margin-right: 15px;
+            font-size: 1.2rem;
+        }
+
+        /* Main Content */
+        .main-content {
+            flex: 1;
+            margin-left: 240px;
+            padding: 30px;
+            transition: all 0.3s ease;
+            background: var(--bg-main);
+            min-height: 100vh;
+        }
+
+        /* Dashboard Grid Layout */
+        .dashboard-panels {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+            gap: 25px;
+            margin-top: 20px;
+        }
+
+        /* Panel Styling */
+        .panel {
+            background: var(--bg-light);
+            border-radius: 15px;
+            box-shadow: 0 4px 15px var(--shadow);
+            overflow: hidden;
+            transition: all 0.3s ease;
+            border: 1px solid rgba(0, 0, 0, 0.05);
+            margin-bottom: 25px;
+        }
+
+        .panel:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(0, 0, 0, 0.15);
+        }
+
+        .panel-header {
+            padding: 20px 25px;
+            background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
+            color: var(--text-light);
+            font-weight: 600;
+            font-size: 1.1rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .panel-body {
+            padding: 25px;
+        }
+
+        /* Profile Section */
+        .profile-section {
+            padding: 20px;
+            margin-top: auto;
+            border-top: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .profile-pic {
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+            overflow: hidden;
+            margin-bottom: 15px;
+        }
+
+        .profile-pic img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .profile-info p {
+            margin-bottom: 10px;
+            font-size: 0.9rem;
+        }
+
+        .badge {
+            background: var(--danger);
+            color: var(--text-light);
+            padding: 5px 15px;
+            border-radius: 20px;
+            font-size: 0.8rem;
+            border: none;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .badge:hover {
+            background: var(--danger-dark);
+            transform: translateY(-1px);
+        }
+
+        /* Form Controls */
+        .form-control {
+            width: 100%;
+            padding: 12px;
+            border: 1px solid rgba(0, 0, 0, 0.1);
+            border-radius: 8px;
+            transition: all 0.3s ease;
+            margin-bottom: 15px;
+        }
+
+        .form-control:focus {
+            outline: none;
+            border-color: var(--primary);
+            box-shadow: 0 0 0 3px rgba(255, 140, 0, 0.1);
+        }
+
+        /* Buttons */
+        .btn {
+            padding: 10px 20px;
+            border-radius: 8px;
+            font-weight: 500;
+            transition: all 0.3s ease;
+            cursor: pointer;
+            border: none;
+        }
+
+        .btn-primary {
+            background: var(--primary);
+            color: var(--text-light);
+        }
+
+        .btn-primary:hover {
+            background: var(--primary-dark);
+            transform: translateY(-1px);
+        }
+    </style>
+</head>
+<body>
+    <!-- Sidebar -->
+    <div class="sidebar">
+        <div class="logo-container">
+            <a href="https://www.facebook.com/profile.php?id=100069248977961" target="_blank" style="text-decoration: none; display: block;">
+                <img src="images/bfp-logo.png" alt="BFP Logo" style="cursor: pointer;">
+            </a>
+        </div>
+        <div class="menu-items">
+            <a class="menu-item active" data-page="dashboard">
+                <i>👤</i>
+                <span>DASHBOARD</span>
+            </a>
+            <a class="menu-item" data-page="map">
+                <i>🗺️</i>
+                <span>MAP</span>
+            </a>
+            <a class="menu-item" data-page="settings">
+                <i>⚙️</i>
+                <span>SETTINGS</span>
+            </a>
+        </div>
+        <div class="profile-section">
+            <div class="profile-pic">
+                <img src="logo.png" alt="BFP Logo">
+            </div>
+            <div class="profile-info">
+                <p>BFPDASMA0001</p>
+                <button class="badge" onclick="window.location.href='login.html'">LOGOUT</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Main Content -->
+    <div class="main-content">
+        <!-- Dashboard Content -->
+        <div id="dashboard-content" class="content-body">
+            <div class="dashboard-panels">
+                <!-- Add your dashboard panels here -->
+            </div>
+        </div>
+
+        <!-- Map Content -->
+        <div id="map-content" class="content-body" style="display: none;">
+            <div id="map" style="height: 600px;"></div>
+        </div>
+
+        <!-- Settings Content -->
+        <div id="settings-content" class="content-body" style="display: none;">
+            <div class="dashboard-panels">
+                <div class="panel">
+                    <div class="panel-header">Settings</div>
+                    <div class="panel-body">
+                        <!-- Add your settings content here -->
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Initialize Facebook Scraper -->
+    <script>
+        document.addEventListener('DOMContentLoaded', async () => {
+            try {
+                // Initialize the Facebook scraper with configuration
+                const scraper = new FacebookScraper(FB_SCRAPER_CONFIG);
+                await scraper.initialize();
+                
+                // Start scraping every 5 minutes
+                setInterval(() => scraper.scrapePages(), 300000);
+                
+                // Listen for fire incident events
+                scraper.addEventListener('fireIncidentFound', (event) => {
+                    const { pageName, message, timestamp, location, confidence } = event.detail;
+                    
+                    // Create notification
+                    createNotification('Fire Incident Detected', 
+                        `New incident reported by ${pageName}\nLocation: ${location}\nConfidence: ${confidence}%`,
+                        'warning');
+                });
+                
+                console.log('Facebook scraper initialized successfully');
+            } catch (error) {
+                console.error('Failed to initialize Facebook scraper:', error);
+                createNotification('Error', 'Failed to initialize Facebook scraper', 'error');
+            }
+        });
+
+        // Navigation functionality
+        document.addEventListener('DOMContentLoaded', function() {
+            const menuItems = document.querySelectorAll('.menu-item');
+            const contentSections = {
+                'dashboard': document.getElementById('dashboard-content'),
+                'map': document.getElementById('map-content'),
+                'settings': document.getElementById('settings-content')
+            };
+
+            menuItems.forEach(item => {
+                item.addEventListener('click', function() {
+                    // Remove active class from all menu items
+                    menuItems.forEach(i => i.classList.remove('active'));
+                    
+                    // Add active class to clicked item
+                    this.classList.add('active');
+                    
+                    // Show selected content
+                    const pageId = this.getAttribute('data-page');
+                    Object.values(contentSections).forEach(section => {
+                        if (section) {
+                            section.style.display = 'none';
+                        }
+                    });
+                    
+                    const activeSection = contentSections[pageId];
+                    if (activeSection) {
+                        activeSection.style.display = 'block';
+                    }
+                });
+            });
+        });
+    </script>
+</body>
+</html>

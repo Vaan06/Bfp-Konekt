@@ -1,0 +1,186 @@
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    font-family: Arial, sans-serif;
+}
+
+body {
+    display: flex;
+    min-height: 100vh;
+}
+
+.login-section {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+}
+
+.logo {
+    margin-bottom: 30px;
+    width: 200px;
+}
+
+.welcome-text {
+    font-size: 48px;
+    font-weight: bold;
+    margin-bottom: 30px;
+}
+
+.login-container {
+    width: 100%;
+    max-width: 460px;
+}
+
+.login-text {
+    text-align: center;
+    margin-bottom: 15px;
+}
+
+.fb-login {
+    display: flex;
+    justify-content: center;
+    margin-bottom: 20px;
+}
+
+.fb-button {
+    background-color: #1877F2;
+    border-radius: 50%;
+    width: 50px;
+    height: 50px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+}
+
+.fb-button img {
+    width: 30px;
+    height: 30px;
+}
+
+.divider {
+    display: flex;
+    align-items: center;
+    margin-bottom: 20px;
+}
+
+.divider::before, .divider::after {
+    content: '';
+    flex: 1;
+    border-bottom: 1px solid #ddd;
+}
+
+.divider-text {
+    padding: 0 10px;
+    color: #777;
+}
+
+.form-group {
+    margin-bottom: 15px;
+    position: relative;
+}
+
+.form-input {
+    width: 100%;
+    padding: 15px;
+    border-radius: 25px;
+    border: 1px solid #ddd;
+    font-size: 16px;
+    background-color: #f7f7f7;
+}
+
+.password-toggle {
+    position: absolute;
+    right: 15px;
+    top: 50%;
+    transform: translateY(-50%);
+    cursor: pointer;
+    color: #555;
+}
+
+.forgot-password {
+    text-align: right;
+    margin-bottom: 20px;
+}
+
+.forgot-password a {
+    color: #333;
+    text-decoration: none;
+    font-size: 14px;
+}
+
+.sign-button {
+    width: 100%;
+    padding: 15px;
+    border-radius: 25px;
+    border: none;
+    background-color: #FFA500;
+    color: white;
+    font-size: 18px;
+    font-weight: bold;
+    cursor: pointer;
+    transition: background-color 0.3s;
+    text-align: center;
+    display: block;
+    text-decoration: none;
+}
+
+.sign-button:hover {
+    background-color: #FF8C00;
+}
+
+.register-section {
+    background-color: #FFA500;
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    color: black;
+    padding: 20px;
+}
+
+.bfp-seal {
+    width: 80px;
+    margin-bottom: 30px;
+}
+
+.create-account {
+    font-size: 36px;
+    font-weight: bold;
+    margin-bottom: 15px;
+}
+
+.discover-text {
+    margin-bottom: 10px;
+    text-align: center;
+}
+
+.report-text {
+    margin-bottom: 30px;
+    text-align: center;
+    font-weight: bold;
+}
+
+#loginForm, #registerForm {
+    width: 100%;
+}
+
+.registration-form {
+    width: 100%;
+    max-width: 460px;
+}
+
+.back-to-login {
+    margin-top: 20px;
+    text-align: center;
+}
+
+.back-to-login a {
+    color: #333;
+    text-decoration: none;
+}

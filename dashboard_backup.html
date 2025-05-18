@@ -1,0 +1,2537 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <title>BFP Konekt Dashboard</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    
+    <!-- Add Leaflet CSS and JS -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin=""/>
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
+    
+    <!-- Add Leaflet Draw plugin for radius editing -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet-draw@1.0.4/dist/leaflet.draw.css"/>
+    <script src="https://unpkg.com/leaflet-draw@1.0.4/dist/leaflet.draw.js"></script>
+    
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: Arial, sans-serif;
+        }
+
+        body {
+            display: flex;
+            min-height: 100vh;
+            background-color: #f0f0f0;
+        }
+
+        /* Notification Bar */
+        .notification-bar {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            background-color: #102372;
+            color: white;
+            padding: 8px 15px;
+            display: flex;
+            justify-content: space-between;
+            z-index: 100;
+        }
+
+        .notification-label {
+            display: flex;
+            align-items: center;
+            font-weight: bold;
+            font-size: 14px;
+        }
+
+        .notification-bell {
+            width: 20px;
+            height: 20px;
+            margin-right: 5px;
+        }
+
+        .station-info {
+            display: flex;
+            align-items: center;
+            font-size: 14px;
+        }
+
+        .location-icon {
+            margin-right: 5px;
+        }
+
+        /* Sidebar */
+        .sidebar {
+            width: 180px;
+            background-color: #FFA500;
+            color: #000;
+            padding-top: 60px;
+            position: fixed;
+            height: 100%;
+            left: 0;
+            top: 0;
+            overflow-y: auto;
+            transition: all 0.3s;
+            z-index: 99;
+        }
+
+        .logo-container {
+            background-color: #FFA500;  
+            padding: 20px;
+            margin: 20px;
+            border-radius: 5px;
+            text-align: center;
+        }
+
+        .logo {
+            max-width: 100%;
+            height: 75%;
+            margin-right: 5%;
+        }
+
+        .menu-items {
+            margin-top: 20px;
+            padding: 0 10px;
+        }
+
+        .menu-item {
+            display: flex;
+            align-items: center;
+            padding: 12px 15px;
+            margin: 5px 0;
+            text-decoration: none;
+            color: #000;
+            font-weight: bold;
+            transition: background-color 0.3s;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+
+        .menu-item.active {
+            background-color: rgba(255, 255, 255, 0.3);
+        }
+
+        .menu-item:hover {
+            background-color: rgba(255, 255, 255, 0.5);
+        }
+
+        .menu-item i {
+            margin-right: 10px;
+            width: 20px;
+            text-align: center;
+        }
+
+        .profile-section {
+            margin-top: auto;
+            padding: 20px;
+            text-align: center;
+        }
+
+        .profile-pic {
+            width: 70px;
+            height: 70px;
+            border-radius: 50%;
+            margin: 0 auto 10px;
+            overflow: hidden;
+            background-color: #ddd;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .profile-pic img {
+            width: 100%;
+            height: auto;
+        }
+
+        .profile-info {
+            font-size: 14px;
+        }
+
+        .badge {
+            background-color: #102372;
+            color: white;
+            padding: 3px 8px;
+            border-radius: 10px;
+            font-size: 12px;
+            margin-top: 5px;
+            display: inline-block;
+        }
+
+        /* Main Content */
+        .main-content {
+            flex: 1;
+            margin-left: 180px;
+            padding-top: 40px;
+            transition: all 0.3s;
+        }
+
+        .content-header {
+            background-color: #102372;
+            color: white;
+            padding: 15px 20px;
+            font-size: 18px;
+            font-weight: bold;
+        }
+
+        .content-body {
+            display: flex;
+            flex-wrap: wrap;
+        }
+
+        .left-panel {
+            flex: 1;
+            padding: 20px;
+            min-width: 300px;
+        }
+
+        .right-panel {
+            flex: 2;
+            background-color: #102372;
+            color: white;
+            padding: 0;
+            display: flex;
+            flex-direction: column;
+            min-width: 100px;
+            margin-top: 18px;
+        }
+
+        .info-box {
+            background-color: #fff;
+            border-radius: 5px;
+            padding: 20px;
+            margin-bottom: 20px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+        }
+
+        .info-box h2 {
+            font-size: 16px;
+            margin-bottom: 15px;
+            color: #333;
+        }
+
+        .info-box p {
+            font-size: 14px;
+            line-height: 1.5;
+            color: #666;
+        }
+
+        .social-box {
+            display: flex;
+            align-items: center;
+            margin-top: 20px;
+        }
+
+        .social-icon {
+            width: 40px;
+            height: 40px;
+            background-color: #3b5998;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-right: 15px;
+            color: white;
+            font-size: 20px;
+        }
+
+        /* Banner Section */
+        .banner {
+            height: 350px;
+            background-size: cover;
+            background-position: center;
+            display: flex;
+            flex-direction: column;
+            justify-content: flex-end;
+            padding: 20px;
+            position: relative;
+        }
+
+        .banner-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(transparent, rgba(0,0,0,0.7));
+        }
+
+        .banner-content {
+            position: relative;
+            z-index: 2;
+            color: white;
+        }
+
+        .banner h1 {
+            font-size: 24px;
+            margin-bottom: 10px;
+        }
+
+        .banner p {
+            font-size: 14px;
+            margin-bottom: 20px;
+        }
+
+        .banner-badge {
+            background-color: #ffa500;
+            color: white;
+            padding: 8px 15px;
+            border-radius: 20px;
+            font-weight: bold;
+            display: inline-block;
+        }
+
+        /* How It Works Section */
+        .how-it-works {
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+
+        .how-it-works h2 {
+            text-align: center;
+            margin-bottom: 20px;
+            color: #333;
+        }
+
+        .process-boxes {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: space-between;
+        }
+
+        .process-box {
+            flex: 1;
+            min-width: 200px;
+            margin: 10px;
+            padding: 15px;
+            background-color: white;
+            border-radius: 5px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+            text-align: center;
+        }
+
+        .process-box.user {
+            background-color: #FFA500;
+        }
+
+        .process-box.bfp {
+            background-color: #FF6347;
+        }
+
+        .process-box h3 {
+            font-size: 16px;
+            margin-bottom: 10px;
+            color: #333;
+        }
+
+        .process-box p {
+            font-size: 14px;
+            color: #666;
+        }
+
+        .process-icon {
+            width: 50px;
+            height: 50px;
+            margin: 0 auto 15px;
+            background-color: #eee;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 20px;
+        }
+
+        /* Footer */
+        .footer {
+            background-color: #102372;
+            color: white;
+            padding: 15px 20px;
+            text-align: center;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .footer-logo {
+            height: 40px;
+            margin-right: 15px;
+        }
+
+        .footer-text {
+            font-size: 12px;
+            flex: 1;
+        }
+
+        .date-display {
+            font-size: 14px;
+            font-weight: bold;
+        }
+
+        /* Dashboard panels */
+        .dashboard-panels {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 20px;
+            padding: 20px;
+        }
+
+        .panel {
+            flex: 1;
+            min-width: 250px;
+            background-color: white;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            overflow: hidden;
+        }
+
+        .panel-header {
+            background-color: #102372;
+            color: white;
+            padding: 15px;
+            font-weight: bold;
+        }
+
+        .panel-body {
+            padding: 15px;
+        }
+
+        .stat-box {
+            display: flex;
+            align-items: center;
+            margin-bottom: 15px;
+        }
+
+        .stat-icon {
+            width: 40px;
+            height: 40px;
+            background-color: #f0f0f0;
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-right: 15px;
+            color: #102372;
+            font-size: 18px;
+        }
+
+        .stat-info h3 {
+            font-size: 14px;
+            color: #666;
+            margin-bottom: 5px;
+        }
+
+        .stat-info p {
+            font-size: 18px;
+            font-weight: bold;
+            color: #102372;
+        }
+
+        .responsive-hide {
+            display: block;
+        }
+
+        /* Responsive Styles */
+        @media screen and (max-width: 992px) {
+            .sidebar {
+                width: 70px;
+                overflow: visible;
+            }
+            
+            .sidebar:hover {
+                width: 180px;
+            }
+
+            .logo-container {
+                padding: 10px;
+                margin: 10px;
+            }
+
+            .menu-item span, .profile-info {
+                display: none;
+            }
+
+            .sidebar:hover .menu-item span, 
+            .sidebar:hover .profile-info {
+                display: inline;
+            }
+
+            .main-content {
+                margin-left: 70px;
+            }
+
+            .content-body {
+                flex-direction: column;
+            }
+
+            .responsive-hide {
+                display: none;
+            }
+        }
+
+        @media screen and (max-width: 768px) {
+            .process-boxes {
+                flex-direction: column;
+            }
+        }
+        
+        #map {
+            width: 100%;
+            height: 600px;
+            border-radius: 10px;
+        }
+        
+        .radius-info {
+            padding: 6px 8px;
+            font: 14px/16px Arial, Helvetica, sans-serif;
+            background: white;
+            background: rgba(255, 255, 255, 0.8);
+            box-shadow: 0 0 15px rgba(0, 0, 0, 0.2);
+            border-radius: 5px;
+        }
+    </style>
+</head>
+<body>
+    <!-- Notification Bar -->
+    <div class="notification-bar">
+        <div class="notification-label">
+            <span class="notification-bell">📢</span>
+            NOTIFICATION
+        </div>
+        <div class="station-info">
+            <span class="location-icon">📍</span>
+            DASMARIÑAS CITY FIRE STATION
+        </div>
+    </div>
+
+    <!-- Sidebar -->
+    <div class="sidebar">
+        <div class="logo-container">
+            <img src="bfp-konekt-bg 1.png" alt="BFP KONEKT Logo" class="logo">
+        </div>
+        <div class="menu-items">
+            <a class="menu-item active" data-page="dashboard">
+                <i>👤</i>
+                <span>DASHBOARD</span>
+            </a>
+            <a class="menu-item" data-page="map">
+                <i>🗺️</i>
+                <span>MAP VIEW</span>
+            </a>
+            <a class="menu-item" data-page="logs">
+                <i>🕒</i>
+                <span>INCIDENT LOGS</span>
+            </a>
+            <a class="menu-item" data-page="reports">
+                <i>📄</i>
+                <span>REPORTS</span>
+            </a>
+            <a class="menu-item" data-page="settings">
+                <i>⚙️</i>
+                <span>SETTINGS</span>
+            </a>
+        </div>
+        <div class="profile-section">
+            <div class="profile-pic">
+                <img src="logo.png" alt="BFP Logo">
+            </div>
+            <div class="profile-info">
+                <p>BFPDASMA0001</p>
+                <button class="badge" onclick="window.location.href='file:///C:/Users/Z48732/OneDrive/Desktop/bfpk/bfpkonekt/login.html'">LOGOUT</button>
+            </div>
+        </div>
+        </div>
+    </div>
+
+    <!-- Main Content -->
+    <div class="main-content">
+        <div class="content-header">
+            DASHBOARD
+        </div>
+        
+        <!-- Content for Dashboard -->
+        <div id="dashboard-content" class="content-body">
+            <div class="left-panel">
+                <div class="info-box">
+                    <h2>"BFP KONEKT" utilizes Facebook to improve the Bureau of Fire Protection's response capabilities</h2>
+                    <p>"BFP KONEKT" utilizes Facebook to improve the Bureau of Fire Protection's response capabilities by receiving and monitoring real-time communication of fire and emergency-related incidents in specific areas. It uses natural language processing technology to efficiently process reports, directing them to appropriate authorities and responsible groups. This innovative approach enables a more effective emergency fire incident reporting system, enabling faster communication and efficient resource dispatch. It fosters community engagement and collaboration, ultimately improving emergency response and public safety management.</p>
+                    
+                    <div class="social-box">
+                        <div class="social-icon">f</div>
+                    </div>
+                </div>
+            </div>
+            <div class="right-panel">
+                <div class="banner" style="background-image: url('bg\ fireman.jpg'); background-size: 100% 100%; " >
+                </div>
+                
+                <div class="how-it-works">
+                    <h2>HOW IT WORKS</h2>
+                    <div class="process-boxes">
+                        <div class="process-box">
+                            <div class="process-icon">📱</div>
+                            <p>A user in need of emergency assistance must use a live or recorded video as emergency alert on Facebook.</p>
+                        </div>
+                        <div class="process-box">
+                            <div class="process-icon">🤖</div>
+                            <p>A specialized system could use AI to extract data, convert videos to text, and identify people and locations to prioritize alerts with urgent cases.</p>
+                        </div>
+                        <div class="process-box bfp">
+                            <div class="process-icon">🔔</div>
+                            <h3>BFP RESPONSE</h3>
+                            <p>Once BFP confirms the mitigation plan, this system forwards your information to nearby fire trucks, allowing for rapid emergency response.</p>
+                        </div>
+                        <div class="process-box user">
+                            <div class="process-icon">📢</div>
+                            <h3>USER FEEDBACK</h3>
+                            <p>To avoid false alarms, users could be a notification service confirming the legitimacy of the emergency. Posts identified as false will receive penalties to maintain the system's integrity.</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+
+       <!-- Content for Map View -->
+<div id="map-content" class="content-body" style="display: none;">
+    <div class="dashboard-panels">
+        <!-- Map Panel -->
+        <div class="panel" style="margin-bottom: 20px;">
+            <div class="panel-header">Map View</div>
+            <div class="panel-body" style="padding: 0;">
+                <div id="map" style="width: 100%; height: 550px;"></div>
+            </div>
+        </div>
+
+        <!-- Incident Reporting Panel -->
+        <div class="panel">
+            <div class="panel-header">Report Fire Incident</div>
+            <div class="panel-body">
+                <form id="incidentForm" style="display: flex; flex-direction: column; gap: 15px;">
+                    <div>
+                        <label style="display: block; margin-bottom: 5px; font-weight: bold;">Incident Type</label>
+                        <select id="incidentType" style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 5px;">
+                            <option value="fire">Fire</option>
+                            <option value="rescue">Rescue</option>
+                            <option value="hazard">Hazard</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label style="display: block; margin-bottom: 5px; font-weight: bold;">Location</label>
+                        <input type="text" id="locationInput" placeholder="Enter location or click on map" 
+                            style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 5px;">
+                    </div>
+                    <div>
+                        <label style="display: block; margin-bottom: 5px; font-weight: bold;">Description</label>
+                        <textarea id="description" placeholder="Enter incident description" 
+                            style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 5px; height: 100px;"></textarea>
+                    </div>
+                    <div>
+                        <label style="display: block; margin-bottom: 5px; font-weight: bold;">Severity</label>
+                        <select id="severity" style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 5px;">
+                            <option value="low">Low</option>
+                            <option value="medium">Medium</option>
+                            <option value="high">High</option>
+                            <option value="critical">Critical</option>
+                        </select>
+                    </div>
+                    <button type="submit" 
+                        style="padding: 10px; background-color: #102372; color: white; border: none; border-radius: 5px; cursor: pointer; font-weight: bold;">
+                        SUBMIT INCIDENT
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Add this script section after your existing scripts -->
+<script>
+    // Initialize the Google Map when the map view is selected
+    let map;
+    let dasmarinasPolygon;
+    
+    function initMap() {
+        // Only initialize if map container exists and is visible
+        const mapContainer = document.getElementById('map');
+        if (!mapContainer || window.getComputedStyle(document.getElementById('map-content')).display === 'none') {
+            return;
+        }
+        
+        // Center coordinates for Dasmariñas, Cavite
+        const dasmarinasCenter = { lat: 14.3292, lng: 120.9380 };
+        
+        // Create the map with enhanced options
+        map = new google.maps.Map(mapContainer, {
+            center: dasmarinasCenter,
+            zoom: 13,
+            styles: [
+                {
+                    "featureType": "all",
+                    "elementType": "labels.text.fill",
+                    "stylers": [{"color": "#ffffff"}]
+                },
+                {
+                    "featureType": "all",
+                    "elementType": "labels.text.stroke",
+                    "stylers": [{"color": "#000000"}, {"lightness": 13}]
+                },
+                {
+                    "featureType": "administrative",
+                    "elementType": "geometry.fill",
+                    "stylers": [{"color": "#000000"}]
+                },
+                {
+                    "featureType": "administrative",
+                    "elementType": "geometry.stroke",
+                    "stylers": [{"color": "#144b53"}, {"lightness": 14}, {"weight": 1.4}]
+                },
+                {
+                    "featureType": "landscape",
+                    "elementType": "all",
+                    "stylers": [{"color": "#08304b"}]
+                },
+                {
+                    "featureType": "poi",
+                    "elementType": "geometry",
+                    "stylers": [{"color": "#0c4152"}, {"lightness": 5}]
+                },
+                {
+                    "featureType": "road.highway",
+                    "elementType": "geometry.fill",
+                    "stylers": [{"color": "#000000"}]
+                },
+                {
+                    "featureType": "road.highway",
+                    "elementType": "geometry.stroke",
+                    "stylers": [{"color": "#0b434f"}, {"lightness": 25}]
+                },
+                {
+                    "featureType": "road.arterial",
+                    "elementType": "geometry.fill",
+                    "stylers": [{"color": "#000000"}]
+                },
+                {
+                    "featureType": "road.arterial",
+                    "elementType": "geometry.stroke",
+                    "stylers": [{"color": "#0b3d51"}, {"lightness": 16}]
+                },
+                {
+                    "featureType": "road.local",
+                    "elementType": "geometry",
+                    "stylers": [{"color": "#000000"}]
+                },
+                {
+                    "featureType": "transit",
+                    "elementType": "all",
+                    "stylers": [{"color": "#146474"}]
+                },
+                {
+                    "featureType": "water",
+                    "elementType": "all",
+                    "stylers": [{"color": "#021019"}]
+                }
+            ],
+            mapTypeControl: true,
+            mapTypeControlOptions: {
+                style: google.maps.MapTypeControlStyle.DROPDOWN_MENU,
+                position: google.maps.ControlPosition.TOP_RIGHT
+            },
+            streetViewControl: true,
+            streetViewControlOptions: {
+                position: google.maps.ControlPosition.RIGHT_TOP
+            },
+            zoomControl: true,
+            zoomControlOptions: {
+                position: google.maps.ControlPosition.RIGHT_CENTER
+            },
+            fullscreenControl: true,
+            fullscreenControlOptions: {
+                position: google.maps.ControlPosition.RIGHT_BOTTOM
+            }
+        });
+        
+        // Dasmariñas boundary coordinates (approximation)
+        const dasmarinasCoords = [
+            {lat: 14.3842, lng: 120.9275}, // North
+            {lat: 14.4027, lng: 120.9613}, // Northeast
+            {lat: 14.3895, lng: 121.0007}, // East
+            {lat: 14.3393, lng: 121.0219}, // Southeast
+            {lat: 14.2909, lng: 120.9921}, // South
+            {lat: 14.2759, lng: 120.9492}, // Southwest
+            {lat: 14.2931, lng: 120.9065}, // West
+            {lat: 14.3459, lng: 120.8934}  // Northwest
+        ];
+        
+        // Create polygon for Dasmariñas boundary
+        dasmarinasPolygon = new google.maps.Polygon({
+            paths: dasmarinasCoords,
+            strokeColor: "#FFFFFF",
+            strokeOpacity: 0.8,
+            strokeWeight: 2,
+            fillColor: "transparent",
+            fillOpacity: 0.1
+        });
+        
+        dasmarinasPolygon.setMap(map);
+        
+        // Add markers for key locations
+        addMarker({lat: 14.3292, lng: 120.9380}, "assets/fire-station.png", "Dasmariñas City Fire Station");
+        
+        // Add shopping mall markers
+        addMarker({lat: 14.3301, lng: 120.9580}, "assets/mall.png", "SM City Dasmariñas");
+        addMarker({lat: 14.3500, lng: 120.9350}, "assets/mall.png", "Robinsons Place Dasmariñas");
+        addMarker({lat: 14.3180, lng: 120.9390}, "assets/mall.png", "Walter Mart Dasmariñas");
+        
+        // Add notable landmarks
+        addMarker({lat: 14.3234, lng: 120.9569}, "assets/landmark.png", "Dasmariñas City Hall");
+        addMarker({lat: 14.3483, lng: 120.9736}, "assets/park.png", "Kadiwa Park");
+        
+        // Add water parks and recreational areas
+        addMarker({lat: 14.3684, lng: 120.9835}, "assets/water.png", "Coco Valley Richness Waterpark");
+        
+        // Initialize search box
+        const searchBox = new google.maps.places.SearchBox(document.getElementById('locationInput'));
+        searchBox.addListener('places_changed', function() {
+            const places = searchBox.getPlaces();
+            if (places.length === 0) return;
+            
+            // Clear existing markers
+            if (window.currentMarker) {
+                window.currentMarker.setMap(null);
+            }
+            
+            // For each place, get the icon, name and location.
+            const bounds = new google.maps.LatLngBounds();
+            places.forEach(function(place) {
+                if (!place.geometry) return;
+
+                // Create a marker for this place
+                window.currentMarker = new google.maps.Marker({
+                    map: map,
+                    title: place.name,
+                    position: place.geometry.location,
+                    draggable: true,
+                    icon: {
+                        url: 'assets/fire-incident.png',
+                        scaledSize: new google.maps.Size(32, 32)
+                    }
+                });
+
+                if (place.geometry.viewport) {
+                    bounds.union(place.geometry.viewport);
+                } else {
+                    bounds.extend(place.geometry.location);
+                }
+            });
+            map.fitBounds(bounds);
+        });
+        
+        // Add distance measurement tool
+        const measureControl = document.createElement('div');
+        measureControl.style.backgroundColor = 'white';
+        measureControl.style.border = '2px solid #fff';
+        measureControl.style.borderRadius = '3px';
+        measureControl.style.boxShadow = '0 2px 6px rgba(0,0,0,.3)';
+        measureControl.style.cursor = 'pointer';
+        measureControl.style.marginBottom = '22px';
+        measureControl.style.textAlign = 'center';
+        measureControl.title = 'Measure Distance';
+        measureControl.innerHTML = '<img src="assets/ruler.png" style="width: 20px; height: 20px; padding: 5px;">';
+        measureControl.index = 1;
+        map.controls[google.maps.ControlPosition.LEFT_BOTTOM].push(measureControl);
+
+        let measureMode = false;
+        let measurePath = [];
+        let measureLine = null;
+        let measureMarkers = [];
+
+        measureControl.addEventListener('click', function() {
+            measureMode = !measureMode;
+            if (measureMode) {
+                measureControl.style.backgroundColor = '#4285F4';
+                map.setOptions({draggableCursor: 'crosshair'});
+            } else {
+                measureControl.style.backgroundColor = 'white';
+                map.setOptions({draggableCursor: null});
+                clearMeasurements();
+            }
+        });
+
+        map.addListener('click', function(e) {
+            if (measureMode) {
+                measurePath.push(e.latLng);
+                addMeasureMarker(e.latLng);
+                updateMeasureLine();
+            } else {
+                // This is for manual incident reporting
+                // Clear existing markers
+                if (window.currentMarker) {
+                    window.currentMarker.setMap(null);
+                }
+                
+                // Add new marker at clicked location
+                window.currentMarker = new google.maps.Marker({
+                    position: e.latLng,
+                    map: map,
+                    draggable: true,
+                    icon: {
+                        url: 'assets/fire-incident.png',
+                        scaledSize: new google.maps.Size(32, 32)
+                    }
+                });
+                
+                // Update location input with coordinates
+                const locationInput = document.getElementById('locationInput');
+                if (locationInput) {
+                    locationInput.value = e.latLng.lat().toFixed(6) + ', ' + e.latLng.lng().toFixed(6);
+                }
+                
+                // Add drag event to update coordinates
+                window.currentMarker.addListener('dragend', function(e) {
+                    if (locationInput) {
+                        locationInput.value = e.latLng.lat().toFixed(6) + ', ' + e.latLng.lng().toFixed(6);
+                    }
+                });
+            }
+        });
+
+        function addMeasureMarker(position) {
+            const marker = new google.maps.Marker({
+                position: position,
+                map: map,
+                draggable: true
+            });
+            measureMarkers.push(marker);
+
+            marker.addListener('drag', function() {
+                updateMeasureLine();
+            });
+        }
+
+        function updateMeasureLine() {
+            if (measureLine) {
+                measureLine.setMap(null);
+            }
+
+            if (measurePath.length > 1) {
+                measureLine = new google.maps.Polyline({
+                    path: measurePath,
+                    geodesic: true,
+                    strokeColor: '#FF0000',
+                    strokeOpacity: 1.0,
+                    strokeWeight: 2
+                });
+                measureLine.setMap(map);
+            }
+        }
+
+        function clearMeasurements() {
+            if (measureLine) {
+                measureLine.setMap(null);
+                measureLine = null;
+            }
+            measureMarkers.forEach(marker => marker.setMap(null));
+            measureMarkers = [];
+            measurePath = [];
+        }
+
+        // Handle form submission
+        document.getElementById('incidentForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            const incidentData = {
+                type: document.getElementById('incidentType').value,
+                location: document.getElementById('locationInput').value,
+                description: document.getElementById('description').value,
+                severity: document.getElementById('severity').value,
+                coordinates: window.currentMarker ? {
+                    lat: window.currentMarker.getPosition().lat(),
+                    lng: window.currentMarker.getPosition().lng()
+                } : null
+            };
+            
+            // Here you would typically send this data to your backend
+            console.log('Incident reported:', incidentData);
+            
+            // Add marker to map with incident details
+            if (window.currentMarker) {
+                const infoWindow = new google.maps.InfoWindow({
+                    content: `
+                        <div style="color: #000;">
+                            <strong>${incidentData.type.toUpperCase()}</strong><br>
+                            Severity: ${incidentData.severity}<br>
+                            ${incidentData.description}
+                        </div>
+                    `
+                });
+                
+                window.currentMarker.addListener('click', function() {
+                    infoWindow.open(map, window.currentMarker);
+                });
+                
+                // Reset form
+                this.reset();
+                window.currentMarker = null;
+            }
+        });
+    }
+    
+    function addMarker(position, icon, title) {
+        // Create marker with custom icon if provided
+        const marker = new google.maps.Marker({
+            position: position,
+            map: map,
+            title: title,
+            icon: icon ? {
+                url: icon,
+                scaledSize: new google.maps.Size(32, 32)
+            } : null
+        });
+        
+        // Add info window with title
+        const infoWindow = new google.maps.InfoWindow({
+            content: `<div style="color: #000; font-weight: bold;">${title}</div>`
+        });
+        
+        marker.addListener("click", () => {
+            infoWindow.open(map, marker);
+        });
+        
+        return marker;
+    }
+    
+    // Modify the existing menu click event to initialize map when map view is selected
+    document.querySelectorAll('.menu-item').forEach(item => {
+        item.addEventListener('click', function() {
+            // Keep your existing code here
+            
+            // Additionally, if map view is selected, initialize the map
+            const page = this.getAttribute('data-page');
+            if (page === 'map') {
+                // Small delay to ensure the container is visible
+                setTimeout(initMap, 100);
+            }
+        });
+    });
+    
+    // Add Google Maps API script with secure configuration
+    function loadGoogleMapsScript() {
+        const script = document.createElement('script');
+        // Replace with your actual API key and add restrictions
+        script.src = "https://maps.googleapis.com/maps/api/js?key=AIzaSyB41DRUbKWJHPxaFjMAwdrzWzbxjKXLgZo&callback=initMap&libraries=places,geometry";
+        script.defer = true;
+        script.async = true;
+        document.head.appendChild(script);
+    }
+    
+    // Load Google Maps API when the page loads
+    window.addEventListener('load', loadGoogleMapsScript);
+
+    // Add radius circle control
+    const radiusControl = document.createElement('div');
+    radiusControl.style.backgroundColor = 'white';
+    radiusControl.style.border = '2px solid #fff';
+    radiusControl.style.borderRadius = '3px';
+    radiusControl.style.boxShadow = '0 2px 6px rgba(0,0,0,.3)';
+    radiusControl.style.cursor = 'pointer';
+    radiusControl.style.marginBottom = '22px';
+    radiusControl.style.textAlign = 'center';
+    radiusControl.title = 'Adjust Monitoring Radius';
+    radiusControl.innerHTML = '<img src="assets/radius.png" style="width: 20px; height: 20px; padding: 5px;">';
+    radiusControl.index = 1;
+    map.controls[google.maps.ControlPosition.LEFT_BOTTOM].push(radiusControl);
+
+    // Create radius circle
+    const radiusCircle = new google.maps.Circle({
+        strokeColor: '#FF0000',
+        strokeOpacity: 0.8,
+        strokeWeight: 2,
+        fillColor: '#FF0000',
+        fillOpacity: 0.35,
+        map: map,
+        center: dasmarinasCenter,
+        radius: 5000, // 5km radius
+        draggable: true,
+        editable: true
+    });
+
+    // Add radius info window
+    const radiusInfoWindow = new google.maps.InfoWindow({
+        content: '<div style="color: #000;">Monitoring Radius: 5km</div>'
+    });
+
+    // Show radius info window on circle click
+    radiusCircle.addListener('click', function() {
+        radiusInfoWindow.setPosition(radiusCircle.getCenter());
+        radiusInfoWindow.open(map);
+    });
+
+    // Update radius info when circle is edited
+    radiusCircle.addListener('radius_changed', function() {
+        const radius = Math.round(radiusCircle.getRadius());
+        const radiusKm = (radius / 1000).toFixed(1);
+        radiusInfoWindow.setContent(`<div style="color: #000;">Monitoring Radius: ${radiusKm}km</div>`);
+    });
+
+    // Update radius info when circle is dragged
+    radiusCircle.addListener('center_changed', function() {
+        const radius = Math.round(radiusCircle.getRadius());
+        const radiusKm = (radius / 1000).toFixed(1);
+        radiusInfoWindow.setContent(`<div style="color: #000;">Monitoring Radius: ${radiusKm}km</div>`);
+    });
+
+    // Toggle radius editing mode
+    let radiusEditMode = false;
+    radiusControl.addEventListener('click', function() {
+        radiusEditMode = !radiusEditMode;
+        if (radiusEditMode) {
+            radiusControl.style.backgroundColor = '#4285F4';
+            radiusCircle.setEditable(true);
+            radiusCircle.setDraggable(true);
+        } else {
+            radiusControl.style.backgroundColor = 'white';
+            radiusCircle.setEditable(false);
+            radiusCircle.setDraggable(false);
+        }
+    });
+</script>
+        
+        <!-- Content for Incident Logs -->
+        <div id="logs-content" class="content-body" style="display: none;">
+            <div class="dashboard-panels">
+                <div class="panel">
+                    <div class="panel-header">Incident Logs</div>
+                    <div class="panel-body">
+                        <table style="width: 100%; border-collapse: collapse;">
+                            <thead>
+                                <tr style="background-color: #f0f0f0;">
+                                    <th style="padding: 10px; text-align: left; border-bottom: 1px solid #ddd;">Date</th>
+                                    <th style="padding: 10px; text-align: left; border-bottom: 1px solid #ddd;">Incident Type</th>
+                                    <th style="padding: 10px; text-align: left; border-bottom: 1px solid #ddd;">Location</th>
+                                    <th style="padding: 10px; text-align: left; border-bottom: 1px solid #ddd;">Status</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td style="padding: 10px; border-bottom: 1px solid #ddd;">14-Dec-2024</td>
+                                    <td style="padding: 10px; border-bottom: 1px solid #ddd;">Fire</td>
+                                    <td style="padding: 10px; border-bottom: 1px solid #ddd;">Dasmariñas City</td>
+                                    <td style="padding: 10px; border-bottom: 1px solid #ddd;">Resolved</td>
+                                </tr>
+                                <tr>
+                                    <td style="padding: 10px; border-bottom: 1px solid #ddd;">13-Dec-2024</td>
+                                    <td style="padding: 10px; border-bottom: 1px solid #ddd;">Emergency Rescue</td>
+                                    <td style="padding: 10px; border-bottom: 1px solid #ddd;">Dasmariñas City</td>
+                                    <td style="padding: 10px; border-bottom: 1px solid #ddd;">Resolved</td>
+                                </tr>
+                                <tr>
+                                    <td style="padding: 10px; border-bottom: 1px solid #ddd;">12-Dec-2024</td>
+                                    <td style="padding: 10px; border-bottom: 1px solid #ddd;">Fire Alarm</td>
+                                    <td style="padding: 10px; border-bottom: 1px solid #ddd;">Dasmariñas City</td>
+                                    <td style="padding: 10px; border-bottom: 1px solid #ddd;">Resolved</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Content for Reports -->
+        <div id="reports-content" class="content-body" style="display: none;">
+            <div class="dashboard-panels">
+                <div class="panel">
+                    <div class="panel-header">Reports</div>
+                    <div class="panel-body">
+                        <div style="display: flex; flex-wrap: wrap; gap: 20px;">
+                            <div style="flex: 1; min-width: 200px; padding: 15px; background-color: #f0f0f0; border-radius: 5px;">
+                                <h3 style="margin-bottom: 10px;">Monthly Reports</h3>
+                                <p>View and generate monthly incident reports</p>
+                                <button style="padding: 5px 10px; background-color: #102372; color: white; border: none; border-radius: 5px; cursor: pointer; margin-top: 10px;">Generate</button>
+                            </div>
+                            <div style="flex: 1; min-width: 200px; padding: 15px; background-color: #f0f0f0; border-radius: 5px;">
+                                <h3 style="margin-bottom: 10px;">Annual Reports</h3>
+                                <p>View and generate annual incident reports</p>
+                                <button style="padding: 5px 10px; background-color: #102372; color: white; border: none; border-radius: 5px; cursor: pointer; margin-top: 10px;">Generate</button>
+                            </div>
+                        </div>
+                        
+                        <!-- Social Media Analytics Section -->
+                        <div style="margin-top: 20px;">
+                            <h3 style="margin-bottom: 15px;">Social Media Analytics</h3>
+                            <div style="display: flex; flex-wrap: wrap; gap: 20px;">
+                                <div style="flex: 1; min-width: 200px; padding: 15px; background-color: #f0f0f0; border-radius: 5px;">
+                                    <h4 style="margin-bottom: 10px;">Facebook Alerts</h4>
+                                    <div style="display: flex; justify-content: space-between; margin-bottom: 5px;">
+                                        <span>Total Scraped Posts:</span>
+                                        <span id="total-posts">347</span>
+                                    </div>
+                                    <div style="display: flex; justify-content: space-between; margin-bottom: 5px;">
+                                        <span>Fire-Related Posts:</span>
+                                        <span id="fire-posts">42</span>
+                                    </div>
+                                    <div style="display: flex; justify-content: space-between; margin-bottom: 5px;">
+                                        <span>NLP Confidence:</span>
+                                        <span id="nlp-confidence">87%</span>
+                                    </div>
+                                    <button id="view-alerts-btn" style="padding: 5px 10px; background-color: #102372; color: white; border: none; border-radius: 5px; cursor: pointer; margin-top: 10px;">View Alerts</button>
+                                </div>
+                                <div style="flex: 1; min-width: 200px; padding: 15px; background-color: #f0f0f0; border-radius: 5px;">
+                                    <h4 style="margin-bottom: 10px;">Incident Analysis</h4>
+                                    <canvas id="incidentChart" width="100%" height="150"></canvas>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- ISO 25010 Evaluation Section -->
+                        <div style="margin-top: 20px;">
+                            <h3 style="margin-bottom: 15px;">System Evaluation (ISO 25010)</h3>
+                            <div style="display: flex; flex-wrap: wrap; gap: 20px;">
+                                <div style="flex: 1; min-width: 200px; padding: 15px; background-color: #f0f0f0; border-radius: 5px;">
+                                    <h4 style="margin-bottom: 10px;">Functionality</h4>
+                                    <div style="background-color: #ddd; height: 20px; border-radius: 10px; overflow: hidden; margin-bottom: 5px;">
+                                        <div style="background-color: #4CAF50; height: 100%; width: 92%;" title="92%"></div>
+                                    </div>
+                                    <div style="display: flex; justify-content: space-between;">
+                                        <span>Score: 92%</span>
+                                        <a href="#" style="color: #102372;">Details</a>
+                                    </div>
+                                </div>
+                                <div style="flex: 1; min-width: 200px; padding: 15px; background-color: #f0f0f0; border-radius: 5px;">
+                                    <h4 style="margin-bottom: 10px;">Efficiency</h4>
+                                    <div style="background-color: #ddd; height: 20px; border-radius: 10px; overflow: hidden; margin-bottom: 5px;">
+                                        <div style="background-color: #2196F3; height: 100%; width: 85%;" title="85%"></div>
+                                    </div>
+                                    <div style="display: flex; justify-content: space-between;">
+                                        <span>Score: 85%</span>
+                                        <a href="#" style="color: #102372;">Details</a>
+                                    </div>
+                                </div>
+                                <div style="flex: 1; min-width: 200px; padding: 15px; background-color: #f0f0f0; border-radius: 5px;">
+                                    <h4 style="margin-bottom: 10px;">Usability</h4>
+                                    <div style="background-color: #ddd; height: 20px; border-radius: 10px; overflow: hidden; margin-bottom: 5px;">
+                                        <div style="background-color: #FF9800; height: 100%; width: 88%;" title="88%"></div>
+                                    </div>
+                                    <div style="display: flex; justify-content: space-between;">
+                                        <span>Score: 88%</span>
+                                        <a href="#" style="color: #102372;">Details</a>
+                                    </div>
+                                </div>
+                                <div style="flex: 1; min-width: 200px; padding: 15px; background-color: #f0f0f0; border-radius: 5px;">
+                                    <h4 style="margin-bottom: 10px;">Security</h4>
+                                    <div style="background-color: #ddd; height: 20px; border-radius: 10px; overflow: hidden; margin-bottom: 5px;">
+                                        <div style="background-color: #9C27B0; height: 100%; width: 90%;" title="90%"></div>
+                                    </div>
+                                    <div style="display: flex; justify-content: space-between;">
+                                        <span>Score: 90%</span>
+                                        <a href="#" style="color: #102372;">Details</a>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+       <!-- Content for Settings -->
+<div id="settings-content" class="content-body" style="display: none;">
+    <div class="dashboard-panels">
+        <div class="panel" style="margin-bottom: 20px;">
+            <div class="panel-header">SETTING</div>
+            <div class="panel-body">
+                <h3 style="margin-bottom: 15px;">Keyword monitoring settings:</h3>
+                
+                <div style="display: flex; flex-wrap: wrap; gap: 20px; margin-bottom: 20px;">
+                    <!-- Left column - Add keywords -->
+                    <div style="flex: 1; min-width: 200px;">
+                        <div style="margin-bottom: 15px;">
+                            <input type="text" id="keywordInput" placeholder="Type a keyword or Phrase..." 
+                                style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 5px; background-color: #f0f0f0;">
+                        </div>
+                        <button id="addKeywordBtn" 
+                            style="padding: 8px 15px; background-color: #102372; color: white; border: none; border-radius: 5px; cursor: pointer; width: 100%; max-width: 150px;">
+                            ADD KEYWORD
+                        </button>
+                        
+                        <div style="margin: 20px 0 15px 0;">
+                            <div style="display: flex; gap: 10px; margin-bottom: 10px;">
+                                <input type="text" id="locationInput" placeholder="Type a location name..." 
+                                    style="flex: 1; padding: 8px; border: 1px solid #ddd; border-radius: 5px; background-color: #f0f0f0;">
+                                <button id="searchLocationBtn" 
+                                    style="padding: 8px; background-color: #102372; color: white; border: none; border-radius: 5px; cursor: pointer;">
+                                    <span>🔍</span>
+                                </button>
+                            </div>
+                            <div id="locationSearchResults" style="display: none; max-height: 150px; overflow-y: auto; background-color: white; border: 1px solid #ddd; margin-bottom: 10px;">
+                                <!-- Search results will appear here -->
+                            </div>
+                            <div style="display: flex; flex-direction: column; margin-bottom: 10px;">
+                                <label style="font-size: 12px; margin-bottom: 5px; color: #666;">Coordinates (Auto-populated)</label>
+                                <div style="display: flex; gap: 10px;">
+                                    <input type="text" id="locationLatInput" placeholder="Latitude" readonly
+                                        style="flex: 1; padding: 8px; border: 1px solid #ddd; border-radius: 5px; background-color: #f5f5f5; color: #666;">
+                                    <input type="text" id="locationLngInput" placeholder="Longitude" readonly
+                                        style="flex: 1; padding: 8px; border: 1px solid #ddd; border-radius: 5px; background-color: #f5f5f5; color: #666;">
+                                </div>
+                            </div>
+                        </div>
+                        <button id="addLocationBtn" 
+                            style="padding: 8px 15px; background-color: #102372; color: white; border: none; border-radius: 5px; cursor: pointer; width: 100%; max-width: 150px;">
+                            ADD LOCATION
+                        </button>
+                    </div>
+                    
+                    <!-- Middle column - Keywords list -->
+                    <div style="flex: 1; min-width: 200px;">
+                        <h4 style="margin-bottom: 10px;">Keywords or phrase:</h4>
+                        <div id="keywordsList" style="height: 300px; overflow-y: auto; border: 1px solid #ddd; background-color: #f0f0f0; padding: 10px; position: relative;">
+                            <!-- Keywords will be added here dynamically -->
+                            <ul style="list-style-type: none; padding: 0; margin: 0;">
+                                <li style="margin-bottom: 5px; display: flex; justify-content: space-between;">
+                                    Sunog sa Dasma <button class="deleteBtn" data-type="keyword" data-value="Sunog sa Dasma">Delete</button>
+                                </li>
+                                <li style="margin-bottom: 5px; display: flex; justify-content: space-between;">
+                                    tulong sunog <button class="deleteBtn" data-type="keyword" data-value="tulong sunog">Delete</button>
+                                </li>
+                                <li style="margin-bottom: 5px; display: flex; justify-content: space-between;">
+                                    emergency ngayon fire <button class="deleteBtn" data-type="keyword" data-value="emergency ngayon fire">Delete</button>
+                                </li>
+                                <li style="margin-bottom: 5px; display: flex; justify-content: space-between;">
+                                    apoy <button class="deleteBtn" data-type="keyword" data-value="apoy">Delete</button>
+                                </li>
+                                <li style="margin-bottom: 5px; display: flex; justify-content: space-between;">
+                                    bfp dasma <button class="deleteBtn" data-type="keyword" data-value="bfp dasma">Delete</button>
+                                </li>
+                                <li style="margin-bottom: 5px; display: flex; justify-content: space-between;">
+                                    fire station <button class="deleteBtn" data-type="keyword" data-value="fire station">Delete</button>
+                                </li>
+                                <li style="margin-bottom: 5px; display: flex; justify-content: space-between;">
+                                    bfp <button class="deleteBtn" data-type="keyword" data-value="bfp">Delete</button>
+                                </li>
+                            </ul>
+                        </div>
+                    </div>
+                    
+                    <!-- Right column - Locations list -->
+                    <div style="flex: 1; min-width: 200px;">
+                        <h4 style="margin-bottom: 10px;">Locations List</h4>
+                        <div id="locationsList" style="height: 300px; overflow-y: auto; border: 1px solid #ddd; background-color: #f0f0f0; padding: 10px;">
+                            <!-- Locations will be added here dynamically -->
+                            <ul style="list-style-type: none; padding: 0; margin: 0;">
+                                <li style="margin-bottom: 5px; display: flex; justify-content: space-between;">
+                                    <span>• Salawag <small style="color: #666;">(14.3223, 120.9587)</small></span>
+                                    <button class="deleteBtn" data-type="location" data-value="Salawag">Delete</button>
+                                </li>
+                                <li style="margin-bottom: 5px; display: flex; justify-content: space-between;">
+                                    <span>• Langkaan I <small style="color: #666;">(14.3456, 120.9378)</small></span>
+                                    <button class="deleteBtn" data-type="location" data-value="Langkaan I">Delete</button>
+                                </li>
+                                <li style="margin-bottom: 5px; display: flex; justify-content: space-between;">
+                                    <span>• Paliparan I <small style="color: #666;">(14.3112, 120.9689)</small></span>
+                                    <button class="deleteBtn" data-type="location" data-value="Paliparan I">Delete</button>
+                                </li>
+                                <li style="margin-bottom: 5px; display: flex; justify-content: space-between;">
+                                    <span>• Salitran I <small style="color: #666;">(14.3335, 120.9723)</small></span>
+                                    <button class="deleteBtn" data-type="location" data-value="Salitran I">Delete</button>
+                                </li>
+                                <li style="margin-bottom: 5px; display: flex; justify-content: space-between;">
+                                    <span>• Salitran IV <small style="color: #666;">(14.3291, 120.9812)</small></span>
+                                    <button class="deleteBtn" data-type="location" data-value="Salitran IV">Delete</button>
+                                </li>
+                                <li style="margin-bottom: 5px; display: flex; justify-content: space-between;">
+                                    <span>• Brgy. Burol I <small style="color: #666;">(14.3315, 120.9424)</small></span>
+                                    <button class="deleteBtn" data-type="location" data-value="Brgy. Burol I">Delete</button>
+                                </li>
+                                <li style="margin-bottom: 5px; display: flex; justify-content: space-between;">
+                                    <span>• San Agustin I <small style="color: #666;">(14.3432, 120.9532)</small></span>
+                                    <button class="deleteBtn" data-type="location" data-value="San Agustin I">Delete</button>
+                                </li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Preview Map for Locations -->
+                <div style="margin-top: 20px; margin-bottom: 20px;">
+                    <h4 style="margin-bottom: 10px;">Location Preview</h4>
+                    <div id="settings-map" style="width: 100%; height: 300px; border-radius: 5px;"></div>
+                </div>
+                
+                <div style="text-align: center; margin-top: 20px; margin-bottom: 20px;">
+                    <button id="confirmSettingsBtn" 
+                        style="padding: 8px 30px; background-color: #102372; color: white; border: none; border-radius: 5px; cursor: pointer; font-weight: bold;">
+                        CONFIRMATION
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Add this JavaScript code at the end of your existing script tag or in a new one -->
+<script>
+    // Wait for DOM to be fully loaded
+    document.addEventListener('DOMContentLoaded', function() {
+        // Settings page functionality
+        const settingsInit = function() {
+            const keywordInput = document.getElementById('keywordInput');
+            const locationInput = document.getElementById('locationInput');
+            const locationLatInput = document.getElementById('locationLatInput');
+            const locationLngInput = document.getElementById('locationLngInput');
+            const searchLocationBtn = document.getElementById('searchLocationBtn');
+            const locationSearchResults = document.getElementById('locationSearchResults');
+            const addKeywordBtn = document.getElementById('addKeywordBtn');
+            const addLocationBtn = document.getElementById('addLocationBtn');
+            const keywordsList = document.getElementById('keywordsList')?.querySelector('ul');
+            const locationsList = document.getElementById('locationsList')?.querySelector('ul');
+            const settingsMapContainer = document.getElementById('settings-map');
+            
+            if (!keywordInput || !locationInput || !addKeywordBtn || !addLocationBtn || !keywordsList || !locationsList) {
+                // Elements not found, might be because the page isn't loaded yet
+                return;
+            }
+            
+            // Initialize locations map
+            let settingsMap;
+            let locationMarkers = [];
+            
+            function initSettingsMap() {
+                if (!settingsMapContainer) return;
+                
+                // Center on Dasmariñas
+                const dasmarinasCenter = { lat: 14.3292, lng: 120.9380 };
+                
+                // Create the map
+                settingsMap = new google.maps.Map(settingsMapContainer, {
+                    center: dasmarinasCenter,
+                    zoom: 13,
+                    mapTypeControl: true,
+                    mapTypeControlOptions: {
+                        style: google.maps.MapTypeControlStyle.DROPDOWN_MENU,
+                        position: google.maps.ControlPosition.TOP_RIGHT
+                    },
+                    streetViewControl: true,
+                    fullscreenControl: true
+                });
+                
+                // Add click event to map
+                settingsMap.addListener('click', function(e) {
+                    // Update lat/lng inputs
+                    locationLatInput.value = e.latLng.lat().toFixed(6);
+                    locationLngInput.value = e.latLng.lng().toFixed(6);
+                    
+                    // Reverse geocode to get location name
+                    reverseGeocode(e.latLng);
+                });
+                
+                // Add existing locations to map
+                populateLocationsOnMap();
+            }
+            
+            // Add all locations from the list to the map
+            function populateLocationsOnMap() {
+                if (!settingsMap) return;
+                
+                // Clear existing markers
+                locationMarkers.forEach(marker => marker.setMap(null));
+                locationMarkers = [];
+                
+                // Get all location items
+                const locationItems = document.querySelectorAll('#locationsList li');
+                
+                locationItems.forEach(item => {
+                    // Extract location name and coordinates
+                    const locationText = item.querySelector('span').textContent;
+                    const locationName = locationText.split('•')[1].trim().split(' (')[0];
+                    
+                    // Extract coordinates if available
+                    const coordsMatch = locationText.match(/\(([^)]+)\)/);
+                    if (coordsMatch && coordsMatch[1]) {
+                        const [lat, lng] = coordsMatch[1].split(', ').map(parseFloat);
+                        
+                        if (!isNaN(lat) && !isNaN(lng)) {
+                            // Add marker
+                            const marker = new google.maps.Marker({
+                                position: { lat, lng },
+                                map: settingsMap,
+                                title: locationName,
+                                icon: {
+                                    url: 'assets/location-pin.png',
+                                    scaledSize: new google.maps.Size(24, 24)
+                                }
+                            });
+                            
+                            // Add info window
+                            const infoWindow = new google.maps.InfoWindow({
+                                content: `<div style="color: #000;">${locationName}</div>`
+                            });
+                            
+                            marker.addListener('click', () => {
+                                infoWindow.open(settingsMap, marker);
+                            });
+                            
+                            locationMarkers.push(marker);
+                        }
+                    }
+                });
+            }
+            
+            // Function to geocode a location name
+            function geocodeLocation(locationName) {
+                // Clear previous results
+                locationSearchResults.innerHTML = '';
+                locationSearchResults.style.display = 'none';
+                
+                if (!locationName.trim()) return;
+                
+                // Create geocoder
+                const geocoder = new google.maps.Geocoder();
+                
+                // Set Dasmariñas as region bias to get more relevant results
+                const bounds = new google.maps.LatLngBounds(
+                    { lat: 14.2759, lng: 120.9065 }, // Southwest
+                    { lat: 14.4027, lng: 121.0219 }  // Northeast
+                );
+                
+                // Perform geocoding
+                geocoder.geocode({
+                    'address': locationName,
+                    'bounds': bounds,
+                    'region': 'ph'
+                }, function(results, status) {
+                    if (status === 'OK' && results.length > 0) {
+                        // Display results
+                        locationSearchResults.style.display = 'block';
+                        
+                        // Create results list
+                        results.slice(0, 5).forEach((result, index) => {
+                            const resultItem = document.createElement('div');
+                            resultItem.style.padding = '8px';
+                            resultItem.style.borderBottom = index < results.length - 1 ? '1px solid #ddd' : 'none';
+                            resultItem.style.cursor = 'pointer';
+                            resultItem.textContent = result.formatted_address;
+                            
+                            // Hover effect
+                            resultItem.addEventListener('mouseover', () => {
+                                resultItem.style.backgroundColor = '#f0f0f0';
+                            });
+                            resultItem.addEventListener('mouseout', () => {
+                                resultItem.style.backgroundColor = 'transparent';
+                            });
+                            
+                            // Click handler
+                            resultItem.addEventListener('click', () => {
+                                const location = result.geometry.location;
+                                locationInput.value = result.formatted_address;
+                                locationLatInput.value = location.lat().toFixed(6);
+                                locationLngInput.value = location.lng().toFixed(6);
+                                
+                                // Center map on this location
+                                if (settingsMap) {
+                                    settingsMap.setCenter(location);
+                                    settingsMap.setZoom(15);
+                                    
+                                    // Add temporary marker
+                                    new google.maps.Marker({
+                                        position: location,
+                                        map: settingsMap,
+                                        title: result.formatted_address,
+                                        animation: google.maps.Animation.DROP
+                                    });
+                                }
+                                
+                                // Hide results
+                                locationSearchResults.style.display = 'none';
+                            });
+                            
+                            locationSearchResults.appendChild(resultItem);
+                        });
+                    } else {
+                        // Show no results message
+                        locationSearchResults.style.display = 'block';
+                        locationSearchResults.innerHTML = '<div style="padding: 8px; color: #666;">No results found</div>';
+                    }
+                });
+            }
+            
+            // Function to reverse geocode coordinates
+            function reverseGeocode(latLng) {
+                const geocoder = new google.maps.Geocoder();
+                
+                geocoder.geocode({'location': latLng}, function(results, status) {
+                    if (status === 'OK') {
+                        if (results[0]) {
+                            locationInput.value = results[0].formatted_address;
+                        } else {
+                            locationInput.value = 'Unknown location';
+                        }
+                    } else {
+                        locationInput.value = 'Error: ' + status;
+                    }
+                });
+            }
+            
+            // Function to add a new keyword
+            function addKeyword() {
+                const keyword = keywordInput.value.trim();
+                if (keyword) {
+                    const li = document.createElement('li');
+                    li.style.marginBottom = '5px';
+                    li.style.display = 'flex';
+                    li.style.justifyContent = 'space-between';
+                    
+                    const deleteBtn = document.createElement('button');
+                    deleteBtn.textContent = 'Delete';
+                    deleteBtn.className = 'deleteBtn';
+                    deleteBtn.dataset.type = 'keyword';
+                    deleteBtn.dataset.value = keyword;
+                    deleteBtn.addEventListener('click', deleteItem);
+                    
+                    li.textContent = keyword + ' ';
+                    li.appendChild(deleteBtn);
+                    keywordsList.appendChild(li);
+                    
+                    keywordInput.value = '';
+                    
+                    // Update social media monitor if available
+                    if (window.socialMediaMonitor) {
+                        window.socialMediaMonitor.keywords.push(keyword);
+                    }
+                }
+            }
+            
+            // Function to add a new location
+            function addLocation() {
+                const location = locationInput.value.trim();
+                
+                if (!location) {
+                    alert('Please enter a location name');
+                    return;
+                }
+                
+                // Check if we have coordinates
+                const lat = parseFloat(locationLatInput.value);
+                const lng = parseFloat(locationLngInput.value);
+                
+                if (isNaN(lat) || isNaN(lng)) {
+                    // If no coordinates, automatically geocode the location
+                    geocodeAndAddLocation(location);
+                } else {
+                    // We have coordinates, add the location directly
+                    addLocationToList(location, lat, lng);
+                }
+            }
+            
+            // Geocode a location and add it to the list
+            function geocodeAndAddLocation(locationName) {
+                // Show loading indicator
+                locationInput.disabled = true;
+                locationInput.value = "Geocoding...";
+                
+                // Create geocoder
+                const geocoder = new google.maps.Geocoder();
+                
+                // Set Dasmariñas as region bias to get more relevant results
+                const bounds = new google.maps.LatLngBounds(
+                    { lat: 14.2759, lng: 120.9065 }, // Southwest
+                    { lat: 14.4027, lng: 121.0219 }  // Northeast
+                );
+                
+                // Perform geocoding
+                geocoder.geocode({
+                    'address': locationName + ", Dasmariñas, Cavite, Philippines",
+                    'bounds': bounds,
+                    'region': 'ph'
+                }, function(results, status) {
+                    // Re-enable input
+                    locationInput.disabled = false;
+                    locationInput.value = locationName;
+                    
+                    if (status === 'OK' && results.length > 0) {
+                        // Get the first result
+                        const result = results[0];
+                        const location = result.geometry.location;
+                        
+                        // Update the inputs
+                        locationLatInput.value = location.lat().toFixed(6);
+                        locationLngInput.value = location.lng().toFixed(6);
+                        
+                        // Add to list
+                        addLocationToList(result.formatted_address, location.lat(), location.lng());
+                        
+                        // Show on map
+                        if (settingsMap) {
+                            settingsMap.setCenter(location);
+                            settingsMap.setZoom(15);
+                        }
+                    } else {
+                        // If geocoding failed, use the center of Dasmariñas as default
+                        alert(`Could not find coordinates for "${locationName}". Using default location.`);
+                        const defaultLat = 14.3292;
+                        const defaultLng = 120.9380;
+                        
+                        // Update the inputs
+                        locationLatInput.value = defaultLat.toFixed(6);
+                        locationLngInput.value = defaultLng.toFixed(6);
+                        
+                        // Add to list
+                        addLocationToList(locationName, defaultLat, defaultLng);
+                    }
+                });
+            }
+            
+            // Add a location to the list with given coordinates
+            function addLocationToList(locationName, lat, lng) {
+                const li = document.createElement('li');
+                li.style.marginBottom = '5px';
+                li.style.display = 'flex';
+                li.style.justifyContent = 'space-between';
+                
+                const deleteBtn = document.createElement('button');
+                deleteBtn.textContent = 'Delete';
+                deleteBtn.className = 'deleteBtn';
+                deleteBtn.dataset.type = 'location';
+                deleteBtn.dataset.value = locationName;
+                deleteBtn.addEventListener('click', deleteItem);
+                
+                const locationSpan = document.createElement('span');
+                locationSpan.innerHTML = `• ${locationName} <small style="color: #666;">(${lat.toFixed(4)}, ${lng.toFixed(4)})</small>`;
+                
+                li.appendChild(locationSpan);
+                li.appendChild(deleteBtn);
+                locationsList.appendChild(li);
+                
+                // Clear inputs
+                locationInput.value = '';
+                locationLatInput.value = '';
+                locationLngInput.value = '';
+                
+                // Add to map
+                if (settingsMap) {
+                    const marker = new google.maps.Marker({
+                        position: { lat, lng },
+                        map: settingsMap,
+                        title: locationName,
+                        animation: google.maps.Animation.DROP,
+                        icon: {
+                            url: 'assets/location-pin.png',
+                            scaledSize: new google.maps.Size(24, 24)
+                        }
+                    });
+                    
+                    // Add info window
+                    const infoWindow = new google.maps.InfoWindow({
+                        content: `<div style="color: #000;">${locationName}</div>`
+                    });
+                    
+                    marker.addListener('click', () => {
+                        infoWindow.open(settingsMap, marker);
+                    });
+                    
+                    locationMarkers.push(marker);
+                }
+                
+                // Update social media monitor if available
+                if (window.socialMediaMonitor) {
+                    window.socialMediaMonitor.locations.push(locationName);
+                    window.socialMediaMonitor.locationCoords = window.socialMediaMonitor.locationCoords || {};
+                    window.socialMediaMonitor.locationCoords[locationName] = { lat, lng };
+                }
+            }
+            
+            // Automatically geocode when location input changes
+            locationInput.addEventListener('blur', function() {
+                const location = this.value.trim();
+                if (location && (!locationLatInput.value || !locationLngInput.value)) {
+                    // Automatically geocode after a short delay
+                    setTimeout(() => {
+                        // Only geocode if the location is still in focus
+                        if (document.activeElement !== locationInput && 
+                            document.activeElement !== searchLocationBtn) {
+                            geocodeLocation(location, true);
+                        }
+                    }, 500);
+                }
+            });
+            
+            // Update geocodeLocation function to allow automatic coordinate population
+            function geocodeLocation(locationName, autoPopulateOnly = false) {
+                // Skip if empty
+                if (!locationName.trim()) return;
+                
+                // Clear previous results
+                if (!autoPopulateOnly) {
+                    locationSearchResults.innerHTML = '';
+                    locationSearchResults.style.display = 'none';
+                }
+                
+                // Create geocoder
+                const geocoder = new google.maps.Geocoder();
+                
+                // Set Dasmariñas as region bias to get more relevant results
+                const bounds = new google.maps.LatLngBounds(
+                    { lat: 14.2759, lng: 120.9065 }, // Southwest
+                    { lat: 14.4027, lng: 121.0219 }  // Northeast
+                );
+                
+                // Perform geocoding
+                geocoder.geocode({
+                    'address': locationName + ", Dasmariñas, Cavite, Philippines",
+                    'bounds': bounds,
+                    'region': 'ph'
+                }, function(results, status) {
+                    if (status === 'OK' && results.length > 0) {
+                        if (autoPopulateOnly) {
+                            // Just populate the coordinate fields
+                            const location = results[0].geometry.location;
+                            locationLatInput.value = location.lat().toFixed(6);
+                            locationLngInput.value = location.lng().toFixed(6);
+                        } else {
+                            // Display results
+                            locationSearchResults.style.display = 'block';
+                            
+                            // Create results list
+                            results.slice(0, 5).forEach((result, index) => {
+                                const resultItem = document.createElement('div');
+                                resultItem.style.padding = '8px';
+                                resultItem.style.borderBottom = index < results.length - 1 ? '1px solid #ddd' : 'none';
+                                resultItem.style.cursor = 'pointer';
+                                resultItem.textContent = result.formatted_address;
+                                
+                                // Hover effect
+                                resultItem.addEventListener('mouseover', () => {
+                                    resultItem.style.backgroundColor = '#f0f0f0';
+                                });
+                                resultItem.addEventListener('mouseout', () => {
+                                    resultItem.style.backgroundColor = 'transparent';
+                                });
+                                
+                                // Click handler
+                                resultItem.addEventListener('click', () => {
+                                    const location = result.geometry.location;
+                                    locationInput.value = result.formatted_address;
+                                    locationLatInput.value = location.lat().toFixed(6);
+                                    locationLngInput.value = location.lng().toFixed(6);
+                                    
+                                    // Center map on this location
+                                    if (settingsMap) {
+                                        settingsMap.setCenter(location);
+                                        settingsMap.setZoom(15);
+                                        
+                                        // Add temporary marker
+                                        new google.maps.Marker({
+                                            position: location,
+                                            map: settingsMap,
+                                            title: result.formatted_address,
+                                            animation: google.maps.Animation.DROP
+                                        });
+                                    }
+                                    
+                                    // Hide results
+                                    locationSearchResults.style.display = 'none';
+                                });
+                                
+                                locationSearchResults.appendChild(resultItem);
+                            });
+                        }
+                    } else if (!autoPopulateOnly) {
+                        // Show no results message
+                        locationSearchResults.style.display = 'block';
+                        locationSearchResults.innerHTML = '<div style="padding: 8px; color: #666;">No results found</div>';
+                    }
+                });
+            }
+            
+            // Function to delete an item
+            function deleteItem(e) {
+                if (confirm('Are you sure you want to delete this item?')) {
+                    const item = e.target.parentElement;
+                    const type = e.target.dataset.type;
+                    const value = e.target.dataset.value;
+                    
+                    item.remove();
+                    
+                    // Update social media monitor if available
+                    if (window.socialMediaMonitor) {
+                        if (type === 'keyword') {
+                            const index = window.socialMediaMonitor.keywords.indexOf(value);
+                            if (index !== -1) {
+                                window.socialMediaMonitor.keywords.splice(index, 1);
+                            }
+                        } else if (type === 'location') {
+                            const index = window.socialMediaMonitor.locations.indexOf(value);
+                            if (index !== -1) {
+                                window.socialMediaMonitor.locations.splice(index, 1);
+                                if (window.socialMediaMonitor.locationCoords) {
+                                    delete window.socialMediaMonitor.locationCoords[value];
+                                }
+                            }
+                        }
+                    }
+                    
+                    // Refresh map markers if deleting a location
+                    if (type === 'location') {
+                        populateLocationsOnMap();
+                    }
+                }
+            }
+            
+            // Initialize the settings map
+            setTimeout(() => {
+                if (typeof google !== 'undefined' && google.maps) {
+                    initSettingsMap();
+                } else {
+                    // Add event listener for Google Maps API
+                    document.addEventListener('google-maps-loaded', initSettingsMap);
+                }
+            }, 500);
+            
+            // Add event listeners for the add buttons
+            addKeywordBtn.addEventListener('click', addKeyword);
+            addLocationBtn.addEventListener('click', addLocation);
+            
+            // Add event listener for search location button
+            if (searchLocationBtn) {
+                searchLocationBtn.addEventListener('click', function() {
+                    geocodeLocation(locationInput.value);
+                });
+            }
+            
+            // Add event listeners for Enter key in input fields
+            keywordInput.addEventListener('keypress', function(e) {
+                if (e.key === 'Enter') {
+                    addKeyword();
+                }
+            });
+            
+            locationInput.addEventListener('keypress', function(e) {
+                if (e.key === 'Enter') {
+                    geocodeLocation(locationInput.value);
+                }
+            });
+            
+            // Add event listeners to existing delete buttons
+            document.querySelectorAll('.deleteBtn').forEach(btn => {
+                btn.addEventListener('click', deleteItem);
+            });
+            
+            // Add validation for lat/lng inputs
+            locationLatInput.addEventListener('input', function() {
+                let val = parseFloat(this.value);
+                if (!isNaN(val)) {
+                    if (val < -90) val = -90;
+                    if (val > 90) val = 90;
+                    this.value = val;
+                }
+            });
+            
+            locationLngInput.addEventListener('input', function() {
+                let val = parseFloat(this.value);
+                if (!isNaN(val)) {
+                    if (val < -180) val = -180;
+                    if (val > 180) val = 180;
+                    this.value = val;
+                }
+            });
+            
+            // Confirmation button functionality
+            const confirmBtn = document.getElementById('confirmSettingsBtn');
+            if (confirmBtn) {
+                confirmBtn.addEventListener('click', function() {
+                    // Save all settings
+                    const keywordItems = document.querySelectorAll('#keywordsList li');
+                    const locationItems = document.querySelectorAll('#locationsList li');
+                    
+                    // Create arrays to store settings
+                    const keywords = [];
+                    const locations = [];
+                    const locationCoords = {};
+                    
+                    // Extract keywords
+                    keywordItems.forEach(item => {
+                        const keyword = item.textContent.replace('Delete', '').trim();
+                        if (keyword) {
+                            keywords.push(keyword);
+                        }
+                    });
+                    
+                    // Extract locations and coordinates
+                    locationItems.forEach(item => {
+                        const locationText = item.querySelector('span').textContent;
+                        const locationName = locationText.split('•')[1].trim().split(' (')[0];
+                        
+                        // Extract coordinates if available
+                        const coordsMatch = locationText.match(/\(([^)]+)\)/);
+                        if (coordsMatch && coordsMatch[1]) {
+                            const [lat, lng] = coordsMatch[1].split(', ').map(parseFloat);
+                            
+                            if (!isNaN(lat) && !isNaN(lng)) {
+                                locations.push(locationName);
+                                locationCoords[locationName] = { lat, lng };
+                            }
+                        }
+                    });
+                    
+                    // Update social media monitor if available
+                    if (window.socialMediaMonitor) {
+                        window.socialMediaMonitor.keywords = keywords;
+                        window.socialMediaMonitor.locations = locations;
+                        window.socialMediaMonitor.locationCoords = locationCoords;
+                    }
+                    
+                    alert('Settings have been saved successfully!');
+                });
+            }
+        };
+
+        // Call settings initialization when settings menu item is clicked
+        document.querySelectorAll('.menu-item').forEach(item => {
+            item.addEventListener('click', function() {
+                if (this.getAttribute('data-page') === 'settings') {
+                    // Let the page render first, then initialize the settings
+                    setTimeout(settingsInit, 100);
+                }
+            });
+        });
+        
+        // Also initialize settings if that's the active page on load
+        if (document.querySelector('.menu-item.active')?.getAttribute('data-page') === 'settings') {
+            setTimeout(settingsInit, 100);
+        }
+        
+        // Create a custom event for Google Maps API loaded
+        window.addEventListener('load', function() {
+            // Create event that will be dispatched when Google Maps is loaded
+            window.gMapsCallback = function() {
+                document.dispatchEvent(new Event('google-maps-loaded'));
+            };
+            
+            // Modify the Google Maps API script to use our callback
+            if (typeof google === 'undefined' || typeof google.maps === 'undefined') {
+                loadGoogleMapsScriptWithCallback();
+            } else {
+                document.dispatchEvent(new Event('google-maps-loaded'));
+            }
+        });
+    });
+    
+    // Add Google Maps API script with callback
+    function loadGoogleMapsScriptWithCallback() {
+        const script = document.createElement('script');
+        script.src = "https://maps.googleapis.com/maps/api/js?key=AIzaSyB41DRUbKWJHPxaFjMAwdrzWzbxjKXLgZo&callback=gMapsCallback&libraries=places,geometry";
+        script.defer = true;
+        script.async = true;
+        document.head.appendChild(script);
+    }
+</script>
+        
+        <!-- Footer -->
+        <div class="footer">
+            <div style="display: flex; align-items: center;">
+                <img src="logo.png" alt="BFP Logo" class="footer-logo">
+                <div class="footer-text">
+                    DASMARIÑAS CITY FIRE STATION<br>
+                    BUREAU OF FIRE PROTECTION CALABARZON
+                </div>
+            </div>
+            <div class="date-display">
+                SATURDAY, 14 DECEMBER 2024
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Get current date and format it
+        function updateDate() {
+            const now = new Date();
+            const days = ['SUNDAY', 'MONDAY', 'TUESDAY', 'WEDNESDAY', 'THURSDAY', 'FRIDAY', 'SATURDAY'];
+            const months = ['JANUARY', 'FEBRUARY', 'MARCH', 'APRIL', 'MAY', 'JUNE', 'JULY', 'AUGUST', 'SEPTEMBER', 'OCTOBER', 'NOVEMBER', 'DECEMBER'];
+            
+            const day = days[now.getDay()];
+            const date = now.getDate();
+            const month = months[now.getMonth()];
+            const year = now.getFullYear();
+            
+            document.querySelector('.date-display').textContent = `${day}, ${date} ${month} ${year}`;
+        }
+        
+        // Call updateDate on page load
+        updateDate();
+
+        // Social Media Scraping and NLP System
+        class SocialMediaMonitor {
+            constructor() {
+                this.fbPosts = [];
+                this.fireRelatedPosts = [];
+                this.keywords = ["fire", "sunog", "apoy", "emergency", "bfp", "tulong"];
+                this.locations = ["Dasmariñas", "Dasma", "Cavite"];
+                this.nlpConfidence = 0;
+                this.isRunning = false;
+                
+                // Load Keywords from Settings
+                if (document.querySelector('#keywordsList')) {
+                    const keywordItems = document.querySelectorAll('#keywordsList li');
+                    keywordItems.forEach(item => {
+                        const keyword = item.textContent.trim().split(' ')[0];
+                        if (keyword && !this.keywords.includes(keyword)) {
+                            this.keywords.push(keyword);
+                        }
+                    });
+                }
+                
+                // Load Locations from Settings
+                if (document.querySelector('#locationsList')) {
+                    const locationItems = document.querySelectorAll('#locationsList li');
+                    locationItems.forEach(item => {
+                        const location = item.textContent.trim().replace('• ', '').split(' ')[0];
+                        if (location && !this.locations.includes(location)) {
+                            this.locations.push(location);
+                        }
+                    });
+                }
+            }
+            
+            // Start scraping process
+            startScraping() {
+                if (this.isRunning) return;
+                
+                this.isRunning = true;
+                console.log("Starting social media scraping process...");
+                
+                // Simulate scraping with periodic updates
+                this.scrapingInterval = setInterval(() => {
+                    this.simulateNewPosts();
+                    this.updateDashboard();
+                }, 10000); // Every 10 seconds
+                
+                // Initial simulation
+                this.simulateInitialData();
+                this.updateDashboard();
+            }
+            
+            // Stop scraping process
+            stopScraping() {
+                if (!this.isRunning) return;
+                
+                clearInterval(this.scrapingInterval);
+                this.isRunning = false;
+                console.log("Social media scraping stopped");
+            }
+            
+            // Simulate initial data
+            simulateInitialData() {
+                // Generate some random posts
+                const initialPostCount = 347;
+                const fireRelatedCount = 42;
+                
+                for (let i = 0; i < initialPostCount; i++) {
+                    const isFireRelated = i < fireRelatedCount;
+                    const post = this.generateRandomPost(isFireRelated);
+                    this.fbPosts.push(post);
+                    
+                    if (isFireRelated) {
+                        this.fireRelatedPosts.push(post);
+                    }
+                }
+                
+                this.nlpConfidence = 87;
+            }
+            
+            // Simulate new incoming posts
+            simulateNewPosts() {
+                const newPostCount = Math.floor(Math.random() * 5) + 1;
+                const newFireRelatedCount = Math.floor(Math.random() * 2);
+                
+                for (let i = 0; i < newPostCount; i++) {
+                    const isFireRelated = i < newFireRelatedCount;
+                    const post = this.generateRandomPost(isFireRelated);
+                    this.fbPosts.push(post);
+                    
+                    if (isFireRelated) {
+                        this.fireRelatedPosts.push(post);
+                        this.processFireIncident(post);
+                    }
+                }
+                
+                // Adjust NLP confidence slightly
+                this.nlpConfidence += (Math.random() * 2 - 1);
+                if (this.nlpConfidence > 100) this.nlpConfidence = 100;
+                if (this.nlpConfidence < 75) this.nlpConfidence = 75;
+            }
+            
+            // Generate a random social media post
+            generateRandomPost(isFireRelated = false) {
+                const locations = ["Salawag", "Langkaan", "Paliparan", "Salitran", "San Agustin", "Burol", "Zone II", "Zone III", "Dasmarinas"];
+                const randomLocation = locations[Math.floor(Math.random() * locations.length)];
+                
+                let content = "";
+                let coords = null;
+                
+                if (isFireRelated) {
+                    const templates = [
+                        `Sunog sa ${randomLocation}! May nakitang apoy sa bahay ng kapitbahay. Tumawag na ng BFP!`,
+                        `Emergency! Fire incident in ${randomLocation} area. Need immediate assistance.`,
+                        `Nag aapoy ang building sa ${randomLocation}. Tulong po BFP Dasma!`,
+                        `Fire alert: Small fire spotted in ${randomLocation}, Dasmarinas. Please respond.`
+                    ];
+                    content = templates[Math.floor(Math.random() * templates.length)];
+                    
+                    // Generate random coordinates in Dasmarinas
+                    const baseLat = 14.3292;
+                    const baseLng = 120.9380;
+                    coords = {
+                        lat: baseLat + (Math.random() * 0.05 - 0.025),
+                        lng: baseLng + (Math.random() * 0.05 - 0.025)
+                    };
+                } else {
+                    const templates = [
+                        `Good morning sa lahat ng taga-${randomLocation}!`,
+                        `Traffic update: Heavy traffic along ${randomLocation} road.`,
+                        `Sharing some photos from yesterday's event in ${randomLocation}.`,
+                        `Anyone knows a good restaurant in ${randomLocation}?`
+                    ];
+                    content = templates[Math.floor(Math.random() * templates.length)];
+                }
+                
+                return {
+                    id: "fb_" + Math.random().toString(36).substr(2, 9),
+                    content: content,
+                    location: randomLocation,
+                    timestamp: new Date(),
+                    isFireRelated: isFireRelated,
+                    confidence: isFireRelated ? (75 + Math.random() * 25) : (Math.random() * 30),
+                    coordinates: coords,
+                    processed: false
+                };
+            }
+            
+            // Process a fire incident using NLP
+            processFireIncident(post) {
+                console.log(`Processing fire incident: ${post.id}`);
+                
+                // NLP Classification (simulated)
+                const classification = this.nlpClassify(post.content);
+                post.classification = classification;
+                
+                // Extract entities (simulated)
+                const entities = this.extractEntities(post.content);
+                post.entities = entities;
+                
+                // If we have coordinates, add to map
+                if (post.coordinates && window.map) {
+                    this.addIncidentToMap(post);
+                }
+                
+                post.processed = true;
+                
+                // Create browser notification for high severity incidents
+                if (classification.severity === 'high' || classification.severity === 'critical') {
+                    this.createNotification(post);
+                }
+            }
+            
+            // Simulated NLP classification
+            nlpClassify(text) {
+                const lowerText = text.toLowerCase();
+                
+                // Simple rule-based classification
+                let severity = 'low';
+                if (lowerText.includes('emergency') || lowerText.includes('urgent')) {
+                    severity = 'high';
+                } else if (lowerText.includes('big') || lowerText.includes('large')) {
+                    severity = 'medium';
+                }
+                
+                let type = 'fire';
+                if (lowerText.includes('rescue')) {
+                    type = 'rescue';
+                } else if (lowerText.includes('chemical') || lowerText.includes('hazard')) {
+                    type = 'hazard';
+                }
+                
+                const confidence = 75 + Math.random() * 25;
+                
+                return {
+                    type: type,
+                    severity: severity,
+                    confidence: confidence
+                };
+            }
+            
+            // Extract entities using simulated NLP
+            extractEntities(text) {
+                const entities = {
+                    locations: [],
+                    people: [],
+                    buildings: []
+                };
+                
+                // Simple keyword extraction
+                this.locations.forEach(location => {
+                    if (text.toLowerCase().includes(location.toLowerCase())) {
+                        entities.locations.push(location);
+                    }
+                });
+                
+                // Look for building types
+                const buildingTypes = ['house', 'building', 'mall', 'school', 'hospital', 'factory'];
+                buildingTypes.forEach(type => {
+                    if (text.toLowerCase().includes(type.toLowerCase())) {
+                        entities.buildings.push(type);
+                    }
+                });
+                
+                return entities;
+            }
+            
+            // Add incident to map
+            addIncidentToMap(post) {
+                if (!window.map) return;
+                
+                // Create a marker with custom icon based on severity
+                let iconUrl = 'assets/fire-incident.png';
+                if (post.classification) {
+                    switch(post.classification.severity) {
+                        case 'critical':
+                            iconUrl = 'assets/critical-incident.png';
+                            break;
+                        case 'high':
+                            iconUrl = 'assets/high-incident.png';
+                            break;
+                        case 'medium':
+                            iconUrl = 'assets/medium-incident.png';
+                            break;
+                    }
+                }
+                
+                const marker = new google.maps.Marker({
+                    position: post.coordinates,
+                    map: window.map,
+                    icon: {
+                        url: iconUrl,
+                        scaledSize: new google.maps.Size(32, 32)
+                    },
+                    title: `Fire incident in ${post.location}`
+                });
+                
+                // Create info window with post content
+                const infoWindow = new google.maps.InfoWindow({
+                    content: `
+                        <div style="color: #000; max-width: 300px;">
+                            <strong>${post.classification ? post.classification.type.toUpperCase() : 'FIRE'} INCIDENT</strong><br>
+                            <strong>Location:</strong> ${post.location}<br>
+                            <strong>Severity:</strong> ${post.classification ? post.classification.severity : 'unknown'}<br>
+                            <strong>Description:</strong> ${post.content}<br>
+                            <strong>Detected:</strong> ${post.timestamp.toLocaleTimeString()}<br>
+                            <strong>NLP Confidence:</strong> ${post.classification ? post.classification.confidence.toFixed(1) + '%' : 'N/A'}
+                        </div>
+                    `
+                });
+                
+                marker.addListener('click', function() {
+                    infoWindow.open(window.map, marker);
+                });
+                
+                return marker;
+            }
+            
+            // Create a browser notification
+            createNotification(post) {
+                if (!("Notification" in window)) {
+                    console.log("Browser does not support notifications");
+                    return;
+                }
+                
+                if (Notification.permission === "granted") {
+                    const notification = new Notification("BFP KONEKT Fire Alert", {
+                        body: post.content,
+                        icon: "logo.png"
+                    });
+                    
+                    notification.onclick = function() {
+                        window.focus();
+                        if (window.map && post.coordinates) {
+                            window.map.setCenter(post.coordinates);
+                            window.map.setZoom(17);
+                        }
+                    };
+                } else if (Notification.permission !== "denied") {
+                    Notification.requestPermission().then(function (permission) {
+                        if (permission === "granted") {
+                            // Try again after permission granted
+                            this.createNotification(post);
+                        }
+                    });
+                }
+            }
+            
+            // Update dashboard with latest metrics
+            updateDashboard() {
+                const totalPostsEl = document.getElementById('total-posts');
+                const firePostsEl = document.getElementById('fire-posts');
+                const nlpConfidenceEl = document.getElementById('nlp-confidence');
+                
+                if (totalPostsEl) totalPostsEl.textContent = this.fbPosts.length;
+                if (firePostsEl) firePostsEl.textContent = this.fireRelatedPosts.length;
+                if (nlpConfidenceEl) nlpConfidenceEl.textContent = this.nlpConfidence.toFixed(1) + '%';
+                
+                // Update chart if available
+                this.updateChart();
+            }
+            
+            // Update incident chart
+            updateChart() {
+                const canvas = document.getElementById('incidentChart');
+                if (!canvas) return;
+                
+                // If Chart.js is not loaded, load it
+                if (!window.Chart) {
+                    const script = document.createElement('script');
+                    script.src = 'https://cdn.jsdelivr.net/npm/chart.js';
+                    script.onload = () => this.renderChart(canvas);
+                    document.head.appendChild(script);
+                } else {
+                    this.renderChart(canvas);
+                }
+            }
+            
+            // Render chart with incident data
+            renderChart(canvas) {
+                if (!window.Chart) return;
+                
+                // Prepare data
+                const last7Days = Array.from({length: 7}, (_, i) => {
+                    const date = new Date();
+                    date.setDate(date.getDate() - (6 - i));
+                    return date.toLocaleDateString('en-US', { weekday: 'short' });
+                });
+                
+                const data = Array.from({length: 7}, () => Math.floor(Math.random() * 10));
+                
+                // Create chart
+                if (window.incidentChart) {
+                    window.incidentChart.destroy();
+                }
+                
+                window.incidentChart = new Chart(canvas, {
+                    type: 'bar',
+                    data: {
+                        labels: last7Days,
+                        datasets: [{
+                            label: 'Fire Incidents',
+                            data: data,
+                            backgroundColor: '#102372',
+                            borderColor: '#102372',
+                            borderWidth: 1
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        scales: {
+                            y: {
+                                beginAtZero: true,
+                                stepSize: 1
+                            }
+                        }
+                    }
+                });
+            }
+        }
+        
+        // Initialize the social media monitor
+        let socialMediaMonitor;
+
+        // Initialize components when document is ready
+        document.addEventListener('DOMContentLoaded', function() {
+            // Initialize social media monitor
+            socialMediaMonitor = new SocialMediaMonitor();
+            socialMediaMonitor.startScraping();
+            
+            // Add view alerts button handler
+            const viewAlertsBtn = document.getElementById('view-alerts-btn');
+            if (viewAlertsBtn) {
+                viewAlertsBtn.addEventListener('click', function() {
+                    // Switch to Map view and show alerts
+                    document.querySelector('.menu-item[data-page="map"]').click();
+                    
+                    // Show all fire incidents on map
+                    if (socialMediaMonitor && window.map) {
+                        // Center map on Dasmarinas
+                        window.map.setCenter({ lat: 14.3292, lng: 120.9380 });
+                        window.map.setZoom(13);
+                        
+                        // Add all fire incidents to map
+                        socialMediaMonitor.fireRelatedPosts.forEach(post => {
+                            if (post.coordinates && !post.markerAdded) {
+                                socialMediaMonitor.addIncidentToMap(post);
+                                post.markerAdded = true;
+                            }
+                        });
+                    }
+                });
+            }
+
+            // Handle menu click for Reports section
+            document.querySelectorAll('.menu-item').forEach(item => {
+                item.addEventListener('click', function() {
+                    const page = this.getAttribute('data-page');
+                    if (page === 'reports') {
+                        // Update social media analytics when reports tab is opened
+                        setTimeout(() => {
+                            if (socialMediaMonitor) {
+                                socialMediaMonitor.updateDashboard();
+                            }
+                        }, 100);
+                    }
+                });
+            });
+        });
+        
+        // Navigation functionality
+        document.querySelectorAll('.menu-item').forEach(item => {
+            item.addEventListener('click', function() {
+                // Remove active class from all menu items
+                document.querySelectorAll('.menu-item').forEach(menuItem => {
+                    menuItem.classList.remove('active');
+                });
+                
+                // Add active class to clicked item
+                this.classList.add('active');
+                
+                // Hide all content divs
+                document.querySelectorAll('.content-body').forEach(content => {
+                    content.style.display = 'none';
+                });
+                
+                // Show the selected content
+                const page = this.getAttribute('data-page');
+                document.getElementById(`${page}-content`).style.display = 'flex';
+                
+                // Update header text
+                document.querySelector('.content-header').textContent = page.toUpperCase();
+                
+                // For mobile view, collapse sidebar after selection
+                if (window.innerWidth <= 992) {
+                    document.querySelector('.sidebar').style.width = '70px';
+                }
+            });
+        });
+        
+        // Responsive behavior
+        window.addEventListener('resize', function() {
+            if (window.innerWidth <= 992) {
+                document.querySelector('.sidebar').style.width = '70px';
+                document.querySelector('.main-content').style.marginLeft = '70px';
+            } else {
+                document.querySelector('.sidebar').style.width = '180px';
+                document.querySelector('.main-content').style.marginLeft = '180px';
+            }
+        });
+    </script>
+</body>
+</html>

@@ -1,0 +1,385 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta property="fb:app_id" content="YOUR_APP_ID">
+    <title>BFP KONEKT - Public Post Scraper Test</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+            background: #f5f5f5;
+        }
+        #console {
+            background: #1e1e1e;
+            color: #fff;
+            padding: 20px;
+            border-radius: 5px;
+            margin-top: 20px;
+            font-family: monospace;
+            white-space: pre-wrap;
+            max-height: 500px;
+            overflow-y: auto;
+        }
+        .success { color: #4CAF50; }
+        .error { color: #f44336; }
+        .post {
+            background: white;
+            padding: 15px;
+            margin: 10px 0;
+            border-radius: 5px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            position: relative;
+            transition: transform 0.3s ease;
+        }
+        .post.pogi {
+            border: 2px solid #FFD700;
+            background: linear-gradient(to right, #fff, #fff8e1);
+        }
+        .post.pogi:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 5px 15px rgba(255, 215, 0, 0.3);
+        }
+        .pogi-badge {
+            position: absolute;
+            top: -10px;
+            right: -10px;
+            background: #FFD700;
+            color: #000;
+            padding: 5px 10px;
+            border-radius: 15px;
+            font-weight: bold;
+            font-size: 0.8em;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+            animation: sparkle 1.5s infinite;
+        }
+        @keyframes sparkle {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.1); }
+            100% { transform: scale(1); }
+        }
+        .post-header {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 10px;
+        }
+        .post-content {
+            margin-bottom: 10px;
+        }
+        .post-footer {
+            display: flex;
+            justify-content: space-between;
+            font-size: 0.8em;
+            color: #666;
+        }
+        button {
+            background: #4267B2;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            margin: 10px 0;
+        }
+        button:hover {
+            background: #365899;
+        }
+        h1 {
+            color: #333;
+        }
+        #stats {
+            background: white;
+            padding: 15px;
+            border-radius: 5px;
+            margin-bottom: 20px;
+        }
+        .pogi-stats {
+            display: flex;
+            gap: 20px;
+            margin-top: 10px;
+        }
+        .pogi-stat {
+            background: #fff8e1;
+            padding: 10px;
+            border-radius: 5px;
+            border: 1px solid #FFD700;
+        }
+        /* Add Facebook login button styles */
+        .fb-login-container {
+            text-align: center;
+            margin: 20px 0;
+            padding: 20px;
+            background: white;
+            border-radius: 5px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        
+        .fb-login-button {
+            background: #1877f2;
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 5px;
+            font-size: 16px;
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .fb-login-button:hover {
+            background: #166fe5;
+        }
+        
+        .fb-login-status {
+            margin-top: 10px;
+            color: #666;
+        }
+        
+        .not-connected {
+            color: #dc3545;
+        }
+        
+        .connected {
+            color: #28a745;
+        }
+    </style>
+</head>
+<body>
+    <h1>BFP KONEKT - Public Post Scraper Test</h1>
+    
+    <!-- Add Facebook Login Container -->
+    <div class="fb-login-container">
+        <div id="fb-login-status" class="fb-login-status not-connected">
+            Not connected to Facebook
+        </div>
+        <button id="fb-login-button" class="fb-login-button">
+            <img src="https://static.xx.fbcdn.net/rsrc.php/v3/y5/r/AgUqgXQzDf3.png" alt="Facebook" style="width: 20px; height: 20px;">
+            Connect with Facebook
+        </button>
+    </div>
+    
+    <div id="stats">
+        <h3>Scraper Statistics</h3>
+        <p>Posts found: <span id="postCount">0</span></p>
+        <p>Last check: <span id="lastCheck">Never</span></p>
+        <div class="pogi-stats">
+            <div class="pogi-stat">
+                <strong>Pogi Posts:</strong> <span id="pogiCount">0</span>
+            </div>
+            <div class="pogi-stat">
+                <strong>Pogi Rate:</strong> <span id="pogiRate">0%</span>
+            </div>
+        </div>
+    </div>
+
+    <div id="fb-root"></div>
+    <div id="posts"></div>
+    <div id="console"></div>
+
+    <!-- Load Facebook SDK -->
+    <script async defer crossorigin="anonymous" src="https://connect.facebook.net/en_US/sdk.js"></script>
+    
+    <!-- Load configuration -->
+    <script src="js/fb-config.js"></script>
+    <!-- Load scraper -->
+    <script src="js/facebook-scraper.js"></script>
+
+    <script>
+        // Override console.log to display in our custom console
+        const consoleDiv = document.getElementById('console');
+        const postsDiv = document.getElementById('posts');
+        const postCountSpan = document.getElementById('postCount');
+        const lastCheckSpan = document.getElementById('lastCheck');
+        const pogiCountSpan = document.getElementById('pogiCount');
+        const pogiRateSpan = document.getElementById('pogiRate');
+        let postCount = 0;
+        let pogiCount = 0;
+
+        const originalLog = console.log;
+        const originalError = console.error;
+
+        console.log = function() {
+            const args = Array.from(arguments);
+            const message = args.map(arg => 
+                typeof arg === 'object' ? JSON.stringify(arg, null, 2) : arg
+            ).join(' ');
+            
+            consoleDiv.innerHTML += `<div class="success">${message}</div>`;
+            originalLog.apply(console, arguments);
+        };
+
+        console.error = function() {
+            const args = Array.from(arguments);
+            const message = args.map(arg => 
+                typeof arg === 'object' ? JSON.stringify(arg, null, 2) : arg
+            ).join(' ');
+            
+            consoleDiv.innerHTML += `<div class="error">${message}</div>`;
+            originalError.apply(console, arguments);
+        };
+
+        // Function to check if a post is pogi
+        function isPogiPost(post) {
+            if (!post.message) return false;
+            
+            const message = post.message.toLowerCase();
+            const pogiPhrases = [
+                'pogi ng dasma',
+                'pogi ng dasmarinas',
+                'dasma pogi',
+                'dasmarinas pogi',
+                'gwapo ng dasma',
+                'gwapo ng dasmarinas',
+                'dasma gwapo',
+                'dasmarinas gwapo',
+                'handsome ng dasma',
+                'handsome ng dasmarinas',
+                'dasma handsome',
+                'dasmarinas handsome'
+            ];
+            
+            // Debug logging
+            console.log('Checking post:', {
+                message: message,
+                source: post.source,
+                time: post.createdTime
+            });
+            
+            // Check if any pogi phrase is in the message
+            const isPogi = pogiPhrases.some(phrase => {
+                const found = message.includes(phrase.toLowerCase());
+                if (found) {
+                    console.log('Found pogi phrase:', phrase);
+                }
+                return found;
+            });
+            
+            if (!isPogi) {
+                console.log('No pogi phrases found in message');
+            }
+            
+            return isPogi;
+        }
+
+        // Function to update pogi stats
+        function updatePogiStats() {
+            pogiCountSpan.textContent = pogiCount;
+            const pogiRate = postCount > 0 ? ((pogiCount / postCount) * 100).toFixed(1) : 0;
+            pogiRateSpan.textContent = `${pogiRate}%`;
+        }
+
+        // Facebook SDK initialization
+        window.fbAsyncInit = function() {
+            FB.init({
+                appId: 'YOUR_APP_ID', // Replace with your Facebook App ID
+                cookie: true,
+                xfbml: true,
+                version: 'v18.0'
+            });
+
+            // Check login status
+            FB.getLoginStatus(function(response) {
+                updateLoginStatus(response);
+            });
+        };
+
+        // Update login status UI
+        function updateLoginStatus(response) {
+            const statusDiv = document.getElementById('fb-login-status');
+            const loginButton = document.getElementById('fb-login-button');
+            
+            if (response.status === 'connected') {
+                statusDiv.textContent = 'Connected to Facebook';
+                statusDiv.className = 'fb-login-status connected';
+                loginButton.textContent = 'Disconnect from Facebook';
+                loginButton.onclick = logout;
+                
+                // Initialize scraper after successful login
+                initializeScraper();
+            } else {
+                statusDiv.textContent = 'Not connected to Facebook';
+                statusDiv.className = 'fb-login-status not-connected';
+                loginButton.innerHTML = '<img src="https://static.xx.fbcdn.net/rsrc.php/v3/y5/r/AgUqgXQzDf3.png" alt="Facebook" style="width: 20px; height: 20px;"> Connect with Facebook';
+                loginButton.onclick = login;
+            }
+        }
+
+        // Facebook login
+        function login() {
+            FB.login(function(response) {
+                updateLoginStatus(response);
+            }, {
+                scope: 'public_profile,email,pages_read_engagement'
+            });
+        }
+
+        // Facebook logout
+        function logout() {
+            FB.logout(function(response) {
+                updateLoginStatus(response);
+            });
+        }
+
+        // Initialize scraper after Facebook login
+        async function initializeScraper() {
+            const scraper = new FacebookScraper(FB_CONFIG);
+            
+            // Add event listener for new posts
+            scraper.addEventListener((posts) => {
+                console.log('Received posts:', posts.length);
+                
+                posts.forEach(post => {
+            postCount++;
+            postCountSpan.textContent = postCount;
+            lastCheckSpan.textContent = new Date().toLocaleString();
+
+                    const isPogi = isPogiPost(post);
+                    if (isPogi) {
+                        pogiCount++;
+                        updatePogiStats();
+                        console.log('Pogi post found!', post);
+                    }
+
+            const postElement = document.createElement('div');
+                    postElement.className = `post${isPogi ? ' pogi' : ''}`;
+                    
+                    if (isPogi) {
+                        const pogiBadge = document.createElement('div');
+                        pogiBadge.className = 'pogi-badge';
+                        pogiBadge.textContent = '🔥 POGI';
+                        postElement.appendChild(pogiBadge);
+                    }
+
+                    postElement.innerHTML += `
+                <div class="post-header">
+                            <strong>${post.source}</strong>
+                            <span>${new Date(post.createdTime).toLocaleString()}</span>
+                </div>
+                <div class="post-content">
+                            ${post.message}
+                </div>
+                <div class="post-footer">
+                            <a href="${post.url}" target="_blank">View on Facebook</a>
+                            <span>Confidence: ${post.confidence}%</span>
+                            <span>Reactions: ${post.reactions} | Comments: ${post.comments}</span>
+                </div>
+            `;
+
+            postsDiv.insertBefore(postElement, postsDiv.firstChild);
+                });
+            });
+
+            // Initialize the scraper
+            try {
+                console.log('Initializing Facebook scraper...');
+                await scraper.init();
+                console.log('Facebook scraper initialized successfully');
+            } catch (error) {
+                console.error('Error initializing Facebook scraper:', error);
+            }
+        }
+    </script>
+</body>
+</html> 
