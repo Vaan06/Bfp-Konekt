@@ -5,62 +5,221 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>BFP Konekt - Login</title>
     <style>
-        * { margin: 0; padding: 0; box-sizing: border-box; font-family: Arial, sans-serif; }
-        body { display: flex; min-height: 100vh; }
-        .login-section { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 20px; }
-        .logo { margin-bottom: 30px; width: 200px; }
-        .welcome-text { font-size: 48px; font-weight: bold; margin-bottom: 30px; }
-        .login-container { width: 100%; max-width: 460px; }
-        .login-text { text-align: center; margin-bottom: 15px; }
-        .fb-login { display: flex; flex-direction: column; align-items: center; margin-bottom: 20px; }
-        .fb-button { background-color: #1877F2; border-radius: 50%; width: 50px; height: 50px; display: flex; align-items: center; justify-content: center; cursor: pointer; margin-bottom: 10px; }
-        .fb-button img { width: 30px; height: 30px; }
-        .divider { display: flex; align-items: center; margin-bottom: 20px; }
-        .divider::before, .divider::after { content: ''; flex: 1; border-bottom: 1px solid #ddd; }
-        .divider-text { padding: 0 10px; color: #777; }
-        .form-group { margin-bottom: 15px; position: relative; }
-        .form-input { width: 100%; padding: 15px; border-radius: 25px; border: 1px solid #ddd; font-size: 16px; background-color: #f7f7f7; }
-        .password-toggle { position: absolute; right: 15px; top: 50%; transform: translateY(-50%); cursor: pointer; color: #555; }
-        .forgot-password { text-align: right; margin-bottom: 20px; }
-        .forgot-password a { color: #333; text-decoration: none; font-size: 14px; }
-        .sign-button { width: 100%; padding: 15px; border-radius: 25px; border: none; background-color: #FFA500; color: white; font-size: 18px; font-weight: bold; cursor: pointer; transition: background-color 0.3s; text-align: center; display: block; text-decoration: none; }
-        .sign-button:hover { background-color: #FF8C00; }
-        .register-section { background-color: #FFA500; flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; color: black; padding: 20px; }
-        .bfp-seal { width: 80px; margin-bottom: 30px; }
-        .create-account { font-size: 36px; font-weight: bold; margin-bottom: 15px; }
-        .discover-text { margin-bottom: 10px; text-align: center; }
-        .report-text { margin-bottom: 30px; text-align: center; font-weight: bold; }
-        #loginForm, #registerForm { width: 100%; }
-        .registration-form { width: 100%; max-width: 460px; }
-        .back-to-login { margin-top: 20px; text-align: center; }
-        .back-to-login a { color: #333; text-decoration: none; }
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: Arial, sans-serif;
+        }
+        
+        body {
+            display: flex;
+            min-height: 100vh;
+        }
+        
+        .login-section {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+        
+        .logo {
+            margin-bottom: 30px;
+            width: 200px;
+        }
+        
+        .welcome-text {
+            font-size: 48px;
+            font-weight: bold;
+            margin-bottom: 30px;
+        }
+        
+        .login-container {
+            width: 100%;
+            max-width: 460px;
+        }
+        
+        .login-text {
+            text-align: center;
+            margin-bottom: 15px;
+        }
+        
+        .fb-login {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+        
+        .fb-button {
+            background-color: #1877F2;
+            border-radius: 50%;
+            width: 50px;
+            height: 50px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            margin-bottom: 10px;
+        }
+        
+        .fb-button img {
+            width: 30px;
+            height: 30px;
+        }
+        
+        .divider {
+            display: flex;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+        
+        .divider::before, .divider::after {
+            content: '';
+            flex: 1;
+            border-bottom: 1px solid #ddd;
+        }
+        
+        .divider-text {
+            padding: 0 10px;
+            color: #777;
+        }
+        
+        .form-group {
+            margin-bottom: 15px;
+            position: relative;
+        }
+        
+        .form-input {
+            width: 100%;
+            padding: 15px;
+            border-radius: 25px;
+            border: 1px solid #ddd;
+            font-size: 16px;
+            background-color: #f7f7f7;
+        }
+        
+        .password-toggle {
+            position: absolute;
+            right: 15px;
+            top: 50%;
+            transform: translateY(-50%);
+            cursor: pointer;
+            color: #555;
+        }
+        
+        .forgot-password {
+            text-align: right;
+            margin-bottom: 20px;
+        }
+        
+        .forgot-password a {
+            color: #333;
+            text-decoration: none;
+            font-size: 14px;
+        }
+        
+        .sign-button {
+            width: 100%;
+            padding: 15px;
+            border-radius: 25px;
+            border: none;
+            background-color: #FFA500;
+            color: white;
+            font-size: 18px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: background-color 0.3s;
+            text-align: center;
+            display: block;
+            text-decoration: none;
+        }
+        
+        .sign-button:hover {
+            background-color: #FF8C00;
+        }
+        
+        .register-section {
+            background-color: #FFA500;
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            color: black;
+            padding: 20px;
+        }
+        
+        .bfp-seal {
+            width: 80px;
+            margin-bottom: 30px;
+        }
+        
+        .create-account {
+            font-size: 36px;
+            font-weight: bold;
+            margin-bottom: 15px;
+        }
+        
+        .discover-text {
+            margin-bottom: 10px;
+            text-align: center;
+        }
+        
+        .report-text {
+            margin-bottom: 30px;
+            text-align: center;
+            font-weight: bold;
+        }
+        
+        #loginForm, #registerForm {
+            width: 100%;
+        }
+        
+        .registration-form {
+            width: 100%;
+            max-width: 460px;
+        }
+        
+        .back-to-login {
+            margin-top: 20px;
+            text-align: center;
+        }
+        
+        .back-to-login a {
+            color: #333;
+            text-decoration: none;
+        }
     </style>
 </head>
 <body>
     <div class="login-section">
         <img src="bfp-konekt-bg 1.png" alt="BFP Konekt" class="logo">
+        
         <div class="welcome-text">WELCOME</div>
+        
         <div class="login-container">
             <form id="loginForm">
                 <div class="login-text">LOGIN USING FB ACCOUNT</div>
+                
                 <div class="fb-login">
-                    <fb:login-button 
-                        scope="public_profile,email,pages_read_engagement,pages_show_list"
-                        onlogin="checkLoginState();"
-                        data-size="large"
-                        data-button-type="login_with"
-                        data-layout="default"
-                        data-auto-logout-link="true"
-                        data-use-continue-as="true">
-                    </fb:login-button>
+                    <div class="fb-button" onclick="checkLoginState()">
+                        <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/0/05/Facebook_Logo_%282019%29.png/1024px-Facebook_Logo_%282019%29.png" alt="Facebook">
+                    </div>
                     <div id="status" style="margin-top:10px;"></div>
                 </div>
+                
                 <div class="divider">
                     <span class="divider-text">OR</span>
                 </div>
+                
                 <div class="form-group">
                     <input type="text" class="form-input" id="username" placeholder="Username:" required>
                 </div>
+                
                 <div class="form-group">
                     <input type="password" class="form-input" id="password" placeholder="Password:" required>
                     <span class="password-toggle" onclick="togglePassword('password')">
@@ -70,31 +229,46 @@
                         </svg>
                     </span>
                 </div>
+                
                 <div class="forgot-password">
                     <a href="#" id="forgotPassword">FORGOT PASSWORD</a>
                 </div>
+                
                 <button type="submit" class="sign-button">Sign in</button>
             </form>
         </div>
     </div>
+    
     <div class="register-section">
         <img src="logo.png" alt="BFP Seal" class="bfp-seal">
+        
         <div class="create-account">CREATE ACCOUNT</div>
+        
         <div class="discover-text">SIGN UP AND DISCOVER</div>
         <div class="report-text">REPORT FIRE INCIDENTS</div>
+        
         <a href="register.html" class="sign-button" id="signUpButton">Sign up</a>
     </div>
+
     <div id="fb-root"></div>
+
     <script>
         window.fbAsyncInit = function() {
             FB.init({
-                appId      : '1328501121552066', // Your App ID
+                appId      : '1328501121552066',
                 cookie     : true,
                 xfbml      : true,
                 version    : 'v18.0'
             });
-            FB.AppEvents.logPageView();
+            
+            // Check login status on page load
+            FB.getLoginStatus(function(response) {
+                if (response.status === 'connected') {
+                    handleFacebookLogin(response);
+                }
+            });
         };
+
         (function(d, s, id){
             var js, fjs = d.getElementsByTagName(s)[0];
             if (d.getElementById(id)) {return;}
@@ -102,29 +276,54 @@
             js.src = "https://connect.facebook.net/en_US/sdk.js";
             fjs.parentNode.insertBefore(js, fjs);
         }(document, 'script', 'facebook-jssdk'));
+
         function checkLoginState() {
-            FB.getLoginStatus(function(response) {
-                statusChangeCallback(response);
+            FB.login(function(response) {
+                if (response.status === 'connected') {
+                    handleFacebookLogin(response);
+                } else {
+                    document.getElementById('status').innerHTML = 'Facebook login failed. Please try again.';
+                }
+            }, {scope: 'public_profile,email'});
+        }
+
+        function handleFacebookLogin(response) {
+            FB.api('/me', {fields: 'name,email,id'}, function(user) {
+                if (user && !user.error) {
+                    // Store user data in localStorage
+                    localStorage.setItem('adminUsername', user.name);
+                    localStorage.setItem('userEmail', user.email);
+                    localStorage.setItem('userId', user.id);
+                    localStorage.setItem('showLoadingScreen', 'true');
+                    
+                    // Show success message
+                    document.getElementById('status').innerHTML = 
+                        'Login successful! Redirecting...';
+                    
+                    // Redirect to dashboard after a short delay
+                    setTimeout(function() {
+                        window.location.href = "dashboard.html";
+                    }, 1000);
+                } else {
+                    document.getElementById('status').innerHTML = 
+                        'Error getting user data. Please try again.';
+                }
             });
         }
+
         function statusChangeCallback(response) {
             if (response.status === 'connected') {
-                FB.api('/me', {fields: 'name,email'}, function(user) {
-                    document.getElementById('status').innerHTML =
-                        'Hello, ' + user.name + '!<br>Email: ' + user.email;
-                    // Optionally redirect to dashboard after login
-                    // window.location.href = 'dashboard.html';
-                });
+                handleFacebookLogin(response);
             } else {
                 document.getElementById('status').innerHTML = 'Please log into Facebook.';
             }
         }
-        // Toggle password visibility
+
         function togglePassword(inputId) {
             const input = document.getElementById(inputId);
             const type = input.getAttribute('type') === 'password' ? 'text' : 'password';
             input.setAttribute('type', type);
-            // Change the eye icon based on password visibility
+            
             const icon = input.nextElementSibling.querySelector('svg');
             if (type === 'text') {
                 icon.innerHTML = '<path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path><line x1="1" y1="1" x2="23" y2="23"></line>';
@@ -132,26 +331,24 @@
                 icon.innerHTML = '<path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path><circle cx="12" cy="12" r="3"></circle>';
             }
         }
-        // Handle login form submission
+
         document.getElementById('loginForm').addEventListener('submit', function(e) {
             e.preventDefault();
             const username = document.getElementById('username').value;
             const password = document.getElementById('password').value;
-            // Simple validation
+            
             if (username && password) {
-                // Here you would normally do server authentication
                 console.log('Login successful! Redirecting to dashboard...');
-                // Store username in localStorage
+                
                 localStorage.setItem('adminUsername', username);
-                // Set flag to show loading screen on dashboard
                 localStorage.setItem('showLoadingScreen', 'true');
-                // Redirect to dashboard
+
                 window.location.href = "dashboard.html";
             } else {
                 alert('Please fill in all fields');
             }
         });
-        // Handle forgot password
+
         document.getElementById('forgotPassword').addEventListener('click', function(e) {
             e.preventDefault();
             const username = document.getElementById('username').value;
