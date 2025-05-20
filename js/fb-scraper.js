@@ -902,7 +902,7 @@ class FacebookScraper extends EventTarget {
             }
 
             await this.executeSearch(searchQuery, 'hashtag', isPrimary);
-                } catch (error) {
+        } catch (error) {
             console.error(`Error searching hashtag ${hashtag}:`, error);
         }
     }
@@ -931,7 +931,7 @@ class FacebookScraper extends EventTarget {
                         });
                     }
                     resolve();
-        } catch (error) {
+                } catch (error) {
                     console.error('Error processing search results:', error);
                     reject(error);
                 }

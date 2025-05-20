@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>BFP Konekt - Login</title>
+    <meta property="fb:app_id" content="1328501121552066">
     <style>
         * {
             margin: 0;
@@ -193,6 +194,31 @@
             color: #333;
             text-decoration: none;
         }
+        
+        /* Add styles for Facebook button container */
+        #fbAuthContainer {
+            margin: 20px 0;
+            text-align: center;
+        }
+        
+        /* Style the Facebook button */
+        .fb-login-button {
+            background-color: #1877F2;
+            color: white;
+            padding: 10px 20px;
+            border-radius: 5px;
+            border: none;
+            cursor: pointer;
+            font-size: 16px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+        }
+        
+        .fb-login-button:hover {
+            background-color: #166FE5;
+        }
     </style>
 </head>
 <body>
@@ -206,8 +232,14 @@
                 <div class="login-text">LOGIN USING FB ACCOUNT</div>
                 
                 <div class="fb-login">
-                    <div class="fb-button" onclick="checkLoginState()">
-                        <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/0/05/Facebook_Logo_%282019%29.png/1024px-Facebook_Logo_%282019%29.png" alt="Facebook">
+                    <div id="fbAuthContainer">
+                        <!-- Facebook Login Button -->
+                        <div class="fb-login-button" onclick="loginWithFacebook()">
+                            <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/0/05/Facebook_Logo_%282019%29.png/1024px-Facebook_Logo_%282019%29.png" 
+                                 alt="Facebook" 
+                                 style="width: 20px; height: 20px;">
+                            Continue with Facebook
+                        </div>
                     </div>
                     <div id="status" style="margin-top:10px;"></div>
                 </div>
@@ -252,72 +284,79 @@
 
     <div id="fb-root"></div>
 
+    <script src="js/user-manager.js"></script>
+    
     <script>
+        // Initialize user manager
+        const userManager = new UserManager();
+        
+        // Function to handle Facebook login
+        function loginWithFacebook() {
+            FB.login(function(response) {
+                if (response.authResponse) {
+                    // User is logged in and has authenticated your app
+                    const fbUserId = response.authResponse.userID;
+                    const userId = userManager.getOrCreateUserId(fbUserId);
+                    
+                    // Store user ID in session
+                    sessionStorage.setItem('bfp_user_id', userId);
+                    sessionStorage.setItem('fb_user_id', fbUserId);
+                    sessionStorage.setItem('fb_access_token', response.authResponse.accessToken);
+                    
+                    // Set loading screen flag
+                    localStorage.setItem('showLoadingScreen', 'true');
+                    
+                    // Redirect to dashboard
+                    window.location.href = 'dashboard.html';
+                } else {
+                    document.getElementById('status').innerHTML = 
+                        'Please login with Facebook to continue.';
+                }
+            }, {
+                scope: 'public_profile,email,pages_read_engagement,pages_show_list'
+            });
+        }
+
+        // Initialize Facebook SDK
         window.fbAsyncInit = function() {
             FB.init({
-                appId      : '1328501121552066',
-                cookie     : true,
-                xfbml      : true,
-                version    : 'v18.0'
+                appId: '1328501121552066',
+                cookie: true,
+                xfbml: true,
+                version: 'v18.0'
             });
             
-            // Check login status on page load
+            FB.AppEvents.logPageView();
+            
+            // Check login status when the page loads
             FB.getLoginStatus(function(response) {
                 if (response.status === 'connected') {
-                    handleFacebookLogin(response);
+                    // User is already logged in
+                    const fbUserId = response.authResponse.userID;
+                    const userId = userManager.getOrCreateUserId(fbUserId);
+                    
+                    // Store user ID in session
+                    sessionStorage.setItem('bfp_user_id', userId);
+                    sessionStorage.setItem('fb_user_id', fbUserId);
+                    sessionStorage.setItem('fb_access_token', response.authResponse.accessToken);
+                    
+                    // Set loading screen flag
+                    localStorage.setItem('showLoadingScreen', 'true');
+                    
+                    // Redirect to dashboard
+                    window.location.href = 'dashboard.html';
                 }
             });
         };
 
-        (function(d, s, id){
+        // Load Facebook SDK
+        (function(d, s, id) {
             var js, fjs = d.getElementsByTagName(s)[0];
-            if (d.getElementById(id)) {return;}
+            if (d.getElementById(id)) return;
             js = d.createElement(s); js.id = id;
             js.src = "https://connect.facebook.net/en_US/sdk.js";
             fjs.parentNode.insertBefore(js, fjs);
         }(document, 'script', 'facebook-jssdk'));
-
-        function checkLoginState() {
-            FB.login(function(response) {
-                if (response.status === 'connected') {
-                    handleFacebookLogin(response);
-                } else {
-                    document.getElementById('status').innerHTML = 'Facebook login failed. Please try again.';
-                }
-            }, {scope: 'public_profile,email'});
-        }
-
-        function handleFacebookLogin(response) {
-            FB.api('/me', {fields: 'name,email,id'}, function(user) {
-                if (user && !user.error) {
-                    // Store user data in localStorage
-                    localStorage.setItem('adminUsername', user.name);
-                    localStorage.setItem('userEmail', user.email);
-                    localStorage.setItem('userId', user.id);
-                    localStorage.setItem('showLoadingScreen', 'true');
-                    
-                    // Show success message
-                    document.getElementById('status').innerHTML = 
-                        'Login successful! Redirecting...';
-                    
-                    // Redirect to dashboard after a short delay
-                    setTimeout(function() {
-                        window.location.href = "dashboard.html";
-                    }, 1000);
-                } else {
-                    document.getElementById('status').innerHTML = 
-                        'Error getting user data. Please try again.';
-                }
-            });
-        }
-
-        function statusChangeCallback(response) {
-            if (response.status === 'connected') {
-                handleFacebookLogin(response);
-            } else {
-                document.getElementById('status').innerHTML = 'Please log into Facebook.';
-            }
-        }
 
         function togglePassword(inputId) {
             const input = document.getElementById(inputId);
@@ -332,16 +371,16 @@
             }
         }
 
+        // Regular login form handler
         document.getElementById('loginForm').addEventListener('submit', function(e) {
             e.preventDefault();
             const username = document.getElementById('username').value;
             const password = document.getElementById('password').value;
             
             if (username && password) {
-                console.log('Login successful! Redirecting to dashboard...');
-                
                 localStorage.setItem('adminUsername', username);
                 localStorage.setItem('showLoadingScreen', 'true');
+                localStorage.setItem('isLoggedIn', 'true');
 
                 window.location.href = "dashboard.html";
             } else {

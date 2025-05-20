@@ -4,7 +4,6 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>BFP Konekt Dashboard</title>
-    <meta property="fb:app_id" content="1539208937059303">
     
     <!-- Add Leaflet CSS and JS -->
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin=""/>
@@ -20,172 +19,6 @@
     
     <!-- Add QR Code library -->
     <script src="https://cdn.jsdelivr.net/npm/qrcodejs@1.0.0/qrcode.min.js"></script>
-
-    <!-- Facebook SDK -->
-    <script>
-        window.fbAsyncInit = function() {
-            FB.init({
-                appId      : '1539208937059303', // Your Facebook App ID
-                cookie     : true,
-                xfbml      : true,
-                version    : 'v18.0'
-            });
-            
-            FB.AppEvents.logPageView();   
-            
-            // Check login status when the page loads
-            FB.getLoginStatus(function(response) {
-                statusChangeCallback(response);
-            });
-        };
-
-        // Function to handle login status changes
-        function statusChangeCallback(response) {
-            if (response.status === 'connected') {
-                // User is logged in and has authenticated your app
-                console.log('User is logged in and authenticated');
-                
-                // Store the access token securely
-                const accessToken = response.authResponse.accessToken;
-                const userId = response.authResponse.userID;
-                
-                // Store in sessionStorage (more secure than localStorage)
-                sessionStorage.setItem('fb_access_token', accessToken);
-                sessionStorage.setItem('fb_user_id', userId);
-                
-                // Set token expiration
-                const expiresIn = response.authResponse.expiresIn;
-                const tokenExpiry = new Date().getTime() + (expiresIn * 1000);
-                sessionStorage.setItem('fb_token_expiry', tokenExpiry);
-                
-                // Update UI to show connected state
-                updateConnectionStatus(true);
-                
-                // Get user profile and permissions
-                getUserProfile();
-                checkPermissions();
-
-                // Hide the login button and show user info
-                const loginButton = document.querySelector('.fb-login-button');
-                if (loginButton) {
-                    loginButton.style.display = 'none';
-                }
-            } else if (response.status === 'not_authorized') {
-                // User is logged in but hasn't authorized your app
-                console.log('User is logged in but not authorized');
-                updateConnectionStatus(false);
-                clearStoredTokens();
-                
-                // Show the login button
-                const loginButton = document.querySelector('.fb-login-button');
-                if (loginButton) {
-                    loginButton.style.display = 'block';
-                }
-            } else {
-                // User is not logged in
-                console.log('User is not logged in');
-                updateConnectionStatus(false);
-                clearStoredTokens();
-                
-                // Show the login button
-                const loginButton = document.querySelector('.fb-login-button');
-                if (loginButton) {
-                    loginButton.style.display = 'block';
-                }
-            }
-        }
-
-        // Function to clear stored tokens
-        function clearStoredTokens() {
-            sessionStorage.removeItem('fb_access_token');
-            sessionStorage.removeItem('fb_user_id');
-            sessionStorage.removeItem('fb_token_expiry');
-        }
-
-        // Function to update UI connection status
-        function updateConnectionStatus(isConnected) {
-            const systemApiStatus = document.getElementById('systemApiStatusValue');
-            if (systemApiStatus) {
-                if (isConnected) {
-                    systemApiStatus.textContent = 'Connected';
-                    systemApiStatus.style.color = 'var(--success)';
-                } else {
-                    systemApiStatus.textContent = 'Disconnected';
-                    systemApiStatus.style.color = 'var(--danger)';
-                }
-            }
-        }
-
-        // Function to check if token is expired
-        function isTokenExpired() {
-            const expiry = sessionStorage.getItem('fb_token_expiry');
-            if (!expiry) return true;
-            return new Date().getTime() > parseInt(expiry);
-        }
-
-        // Function to check required permissions
-        function checkPermissions() {
-            FB.api('/me/permissions', function(response) {
-                if (response && !response.error) {
-                    const requiredPermissions = ['public_profile', 'pages_read_engagement', 'pages_show_list'];
-                    const missingPermissions = requiredPermissions.filter(perm => 
-                        !response.data.some(p => p.permission === perm && p.status === 'granted')
-                    );
-                    
-                    if (missingPermissions.length > 0) {
-                        console.log('Missing permissions:', missingPermissions);
-                        // You might want to request missing permissions here
-                        requestMissingPermissions(missingPermissions);
-                    }
-                }
-            });
-        }
-
-        // Function to request missing permissions
-        function requestMissingPermissions(permissions) {
-            FB.login(function(response) {
-                if (response.authResponse) {
-                    console.log('Permissions granted');
-                    checkPermissions(); // Check again after new permissions
-                } else {
-                    console.log('User cancelled login or did not fully authorize.');
-                }
-            }, {scope: permissions.join(',')});
-        }
-
-        // Function to get user profile information
-        function getUserProfile() {
-            FB.api('/me', {fields: 'name,email,picture'}, function(response) {
-                if (response && !response.error) {
-                    console.log('User profile:', response);
-                    // Update UI with user information
-                    updateUserProfileUI(response);
-                }
-            });
-        }
-
-        // Function to update UI with user profile
-        function updateUserProfileUI(userData) {
-            const profilePic = document.querySelector('.profile-pic img');
-            const usernameDisplay = document.getElementById('adminUsernameDisplay');
-            
-            if (profilePic && userData.picture) {
-                profilePic.src = userData.picture.data.url;
-            }
-            
-            if (usernameDisplay) {
-                usernameDisplay.textContent = userData.name;
-            }
-        }
-
-        (function(d, s, id){
-            var js, fjs = d.getElementsByTagName(s)[0];
-            if (d.getElementById(id)) {return;}
-            js = d.createElement(s); js.id = id;
-            js.src = "https://connect.facebook.net/en_US/sdk.js";
-            fjs.parentNode.insertBefore(js, fjs);
-        }(document, 'script', 'facebook-jssdk'));
-    </script>
     
     <!-- NLP Libraries -->
     <script src="https://unpkg.com/compromise"></script>
@@ -194,14 +27,11 @@
     <!-- Geocoding and Location Libraries -->
     <script src="https://cdn.jsdelivr.net/npm/turf@3.0.14/turf.min.js"></script>
     
-    <!-- Custom FB Scraper and NLP Module -->
-    <script src="js/fb-scraper.js"></script>
+    <!-- Custom NLP Module -->
     <script src="js/nlp-processor.js"></script>
-    <script src="js/fb-scraper-config.js"></script>
 
-    <!-- Facebook Authentication -->
-    <script src="js/fb-auth-ui.js"></script>
-    <script src="js/fb-auth-handler.js"></script>
+    <!-- Add User Manager Script -->
+    <script src="js/user-manager.js"></script>
 
     <style>
         :root {
@@ -277,7 +107,16 @@
             width: auto;
             height: auto;
             margin-bottom: 15px;
-            filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.2));
+            filter: drop-shadow(0 4px 8px rgba(0, 0, 0, 0.3))
+                   drop-shadow(0 8px 16px rgba(0, 0, 0, 0.2));
+            transform: perspective(1000px) rotateX(5deg);
+            transition: all 0.3s ease;
+        }
+
+        .logo-container img:hover {
+            transform: perspective(1000px) rotateX(0deg) scale(1.05);
+            filter: drop-shadow(0 6px 12px rgba(0, 0, 0, 0.4))
+                   drop-shadow(0 12px 24px rgba(0, 0, 0, 0.3));
         }
 
         .menu-items {
@@ -1003,21 +842,278 @@
             0% { transform: rotate(0deg); }
             100% { transform: rotate(360deg); }
         }
+
+        /* Notification Panel Styles */
+        .notification-panel {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            width: 350px;
+            max-height: 80vh;
+            background: var(--bg-light);
+            border-radius: 10px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+            z-index: 1000;
+            overflow-y: auto;
+            display: none;
+        }
+
+        .notification-panel.active {
+            display: block;
+        }
+
+        .notification-header {
+            padding: 15px;
+            background: var(--primary);
+            color: white;
+            border-radius: 10px 10px 0 0;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .notification-header h3 {
+            margin: 0;
+            font-size: 1.1rem;
+        }
+
+        .notification-count {
+            background: var(--danger);
+            color: white;
+            padding: 2px 8px;
+            border-radius: 12px;
+            font-size: 0.9rem;
+        }
+
+        .notification-list {
+            padding: 10px;
+        }
+
+        .notification-item {
+            padding: 15px;
+            border-bottom: 1px solid var(--bg-main);
+            display: flex;
+            gap: 10px;
+            align-items: start;
+        }
+
+        .notification-item:last-child {
+            border-bottom: none;
+        }
+
+        .notification-content {
+            flex: 1;
+        }
+
+        .notification-title {
+            font-weight: 600;
+            margin-bottom: 5px;
+            color: var(--text-dark);
+        }
+
+        .notification-message {
+            font-size: 0.9rem;
+            color: var(--text-muted);
+            margin-bottom: 10px;
+        }
+
+        .notification-time {
+            font-size: 0.8rem;
+            color: var(--text-muted);
+            margin-bottom: 5px;
+        }
+
+        .notification-link {
+            font-size: 0.8rem;
+            color: var(--primary);
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+        }
+
+        .notification-link:hover {
+            text-decoration: underline;
+        }
+
+        .notification-actions {
+            display: flex;
+            gap: 5px;
+        }
+
+        .notification-btn {
+            padding: 5px 10px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 0.8rem;
+            transition: all 0.3s ease;
+        }
+
+        .btn-verify {
+            background: var(--success);
+            color: white;
+        }
+
+        .btn-ignore {
+            background: var(--danger);
+            color: white;
+        }
+
+        .notification-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+        }
+
+        /* Notification Bell Icon */
+        .notification-bell {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background: var(--primary);
+            color: white;
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            z-index: 999;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
+            transition: all 0.3s ease;
+        }
+
+        .notification-bell:hover {
+            transform: scale(1.1);
+        }
+
+        .notification-bell.has-new::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            right: 0;
+            width: 10px;
+            height: 10px;
+            background: var(--danger);
+            border-radius: 50%;
+            border: 2px solid white;
+        }
+
+        /* Sound Alert Animation */
+        @keyframes soundAlert {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.2); }
+            100% { transform: scale(1); }
+        }
+
+        .sound-alert {
+            animation: soundAlert 1s ease infinite;
+        }
+
+        /* Add new styles for enhanced incident display */
+        .incident-metrics {
+            display: flex;
+            gap: 10px;
+            margin-top: 5px;
+            font-size: 0.8rem;
+        }
+
+        .metric {
+            display: flex;
+            align-items: center;
+            gap: 3px;
+            color: var(--text-muted);
+        }
+
+        .incident-hashtags {
+            margin-top: 5px;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 5px;
+        }
+
+        .hashtag {
+            background: var(--primary-light);
+            color: var(--text-light);
+            padding: 2px 8px;
+            border-radius: 12px;
+            font-size: 0.8rem;
+        }
+
+        .incident-actions {
+            display: flex;
+            gap: 8px;
+        }
+
+        .btn-view {
+            background-color: var(--info);
+            color: white;
+            padding: 6px 12px;
+            font-size: 0.85rem;
+            border-radius: 5px;
+            border: none;
+            cursor: pointer;
+            white-space: nowrap;
+            transition: background-color 0.2s ease-in-out;
+        }
+
+        .btn-view:hover {
+            background-color: #138496;
+        }
+
+        .incident-popup .incident-metrics {
+            margin: 10px 0;
+            padding: 5px 0;
+            border-top: 1px solid rgba(0,0,0,0.1);
+            border-bottom: 1px solid rgba(0,0,0,0.1);
+        }
+
+        .incident-popup .incident-hashtags {
+            margin: 10px 0;
+        }
+
+        .incident-popup .incident-actions {
+            margin-top: 10px;
+            display: flex;
+            gap: 5px;
+            flex-wrap: wrap;
+        }
+
+        .incident-popup .incident-actions button {
+            flex: 1;
+            min-width: 100px;
+        }
     </style>
 </head>
 <body>
+    <!-- Add Notification Bell -->
+    <div class="notification-bell" onclick="toggleNotificationPanel()">
+        🔔
+    </div>
+
+    <!-- Add Notification Panel -->
+    <div class="notification-panel" id="notificationPanel">
+        <div class="notification-header">
+            <h3>Verification Requests</h3>
+            <span class="notification-count" id="notificationCount">0</span>
+        </div>
+        <div class="notification-list" id="notificationList">
+            <!-- Notifications will be added here dynamically -->
+        </div>
+    </div>
+
     <!-- Loading Screen Overlay -->
     <div id="loadingOverlay" style="display: none;">
-        <!-- <img src="bfp-anime-landscape.png" alt="Loading BFPKonekt..."> Removed img tag -->
         <p>Loading Dashboard...</p>
-        <div class="loader-spinner"></div> <!-- Optional spinner -->
+        <div class="loader-spinner"></div>
     </div>
 
     <!-- Sidebar -->
     <div class="sidebar">
         <div class="logo-container">
-            <a href="https://www.facebook.com/profile.php?id=100069248977961" target="_blank" style="text-decoration: none; display: block;">
-                <img src="images/bfp-logo.png" alt="BFP Logo" style="cursor: pointer;">
+            <a href="#" target="_blank" style="text-decoration: none; display: block;">
+                <img src="Konekt (1).png" alt="BFP Logo" style="cursor: pointer;">
             </a>
         </div>
         <div class="menu-items">
@@ -1045,17 +1141,6 @@
             <div class="profile-info">
                 <p id="adminUsernameDisplay">BFPDASMA0001</p>
                 <button class="badge" onclick="window.location.href='login.html'">LOGOUT</button>
-                <div id="fbAuthSidebarContainer">
-                    <fb:login-button 
-                        scope="public_profile,email,pages_read_engagement,pages_show_list"
-                        onlogin="checkLoginState();"
-                        data-size="large"
-                        data-button-type="login_with"
-                        data-layout="default"
-                        data-auto-logout-link="true"
-                        data-use-continue-as="true">
-                    </fb:login-button>
-                </div>
             </div>
         </div>
     </div>
@@ -1108,17 +1193,20 @@
                                 <div class="stat-label">API Status</div>
                             </div>
                             <div class="stat-item">
-                                <div class="stat-value">Online</div>
-                                <div class="stat-label">Status</div>
+                                <div id="actorStatusValue" class="stat-value" style="color: var(--warning);">Checking...</div>
+                                <div class="stat-label">Actor Status</div>
                             </div>
                             <div class="stat-item">
-                                <div class="stat-value">5 min</div>
-                                <div class="stat-label">Update Interval</div>
+                                <div id="lastRunStatusValue" class="stat-value" style="color: var(--warning);">-</div>
+                                <div class="stat-label">Last Run</div>
                             </div>
                             <div class="stat-item">
-                                <div class="stat-value">Good</div>
+                                <div id="connectionStatusValue" class="stat-value" style="color: var(--warning);">Checking...</div>
                                 <div class="stat-label">Connection</div>
                             </div>
+                        </div>
+                        <div id="connectionDetails" style="margin-top: 15px; font-size: 0.9rem; color: var(--text-muted);">
+                            Last checked: Never
                         </div>
                     </div>
                 </div>
@@ -1137,29 +1225,6 @@
         <div id="settings-content" class="content-body">
             <h1 class="content-header">Settings</h1>
             <div class="dashboard-panels">
-                <!-- Logo Settings Panel -->
-                <div class="panel">
-                    <div class="panel-header">Logo Settings</div>
-                    <div class="panel-body">
-                        <div class="logo-settings">
-                            <div class="logo-preview">
-                                <h3>Current Logo</h3>
-                                <img id="currentLogo" src="images/bfp-logo.png" alt="Current Logo">
-                                <p class="logo-info">Recommended size: 200x200px</p>
-                            </div>
-                            <div class="logo-upload">
-                                <label for="logoFile" class="btn btn-primary">Choose New Logo</label>
-                                <input type="file" id="logoFile" accept="image/*" style="display: none;">
-                                <p id="selectedFileName" class="selected-file"></p>
-                            </div>
-                            <div class="logo-actions">
-                                <button id="uploadLogo" class="btn btn-primary" disabled>Upload Logo</button>
-                                <button id="resetLogo" class="btn btn-secondary">Reset to Default</button>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
                 <!-- Keyword Management Panel -->
                 <div class="panel">
                     <div class="panel-header">Keyword Management</div>
@@ -1256,23 +1321,24 @@
     </div>
 
     <script>
+        // Initialize user manager
+        const userManager = new UserManager();
+        
         // Map markers and data management
         let map;
         let markers = new Map();
         let markerCluster;
-        let liveIncidentsData = new Map(); // Stores {id, message, location, currentStatus, ...}
+        let liveIncidentsData = new Map();
         let dashboardReportStats = {
             totalReportedThisSession: 0,
             activeCases: 0
         };
 
         // --- START: BFP LANDMARK DATA ---
-        // IMPORTANT: Replace with actual BFP station names and coordinates
         const bfpLandmarks = [
             { name: "BFP Dasmariñas City Main Station", lat: 14.3285, lng: 120.9370, address: "Aguinaldo Highway, Dasmariñas, Cavite" },
             { name: "BFP Salawag Sub-Station", lat: 14.2900, lng: 120.9700, address: "Salawag, Dasmariñas, Cavite" },
             { name: "BFP Paliparan Sub-Station", lat: 14.3000, lng: 120.9900, address: "Paliparan, Dasmariñas, Cavite" }
-            // Add more BFP stations here as needed
         ];
         // --- END: BFP LANDMARK DATA ---
 
@@ -1313,39 +1379,26 @@
             markerCluster = L.markerClusterGroup();
             map.addLayer(markerCluster);
 
-            // --- START: Add BFP Landmarks to Map ---
+            // Add BFP Landmarks to Map
             bfpLandmarks.forEach(landmark => {
-                // For a more distinct look, you can use a custom icon for BFP stations.
-                // Create an L.icon object and pass it in the marker options: { icon: bfpStationIcon }
-                // Example custom icon definition (place this outside the loop if using the same icon for all):
-                // const bfpStationIcon = L.icon({
-                //     iconUrl: 'images/bfp_station_icon.png', // Ensure you have this image
-                //     iconSize: [30, 30], // Adjust size as needed
-                //     iconAnchor: [15, 30],   // Point of the icon which will correspond to marker's location
-                //     popupAnchor: [0, -30] // Point from which the popup should open relative to the iconAnchor
-                // });
-
-                const landmarkMarker = L.marker([landmark.lat, landmark.lng]) // Add { icon: bfpStationIcon } here if using custom icon
-                    .addTo(map) // Add directly to map, not markerCluster
+                const landmarkMarker = L.marker([landmark.lat, landmark.lng])
+                    .addTo(map)
                     .bindPopup(`<b>${landmark.name}</b><br>${landmark.address || 'Address not available'}`);
             });
-            // --- END: Add BFP Landmarks to Map ---
 
-            // --- START: Add Geocoder Search Control ---
+            // Add Geocoder Search Control
             L.Control.geocoder({
-                defaultMarkGeocode: true, // Automatically add a marker for the result
-                geocoder: L.Control.Geocoder.nominatim(), // Use Nominatim for geocoding
+                defaultMarkGeocode: true,
+                geocoder: L.Control.Geocoder.nominatim(),
                 placeholder: 'Search for a location...', 
                 errorMessage: 'Nothing found.'
             })
             .on('markgeocode', function(e) {
-                // When a geocode result is marked (marker added)
                 if (e.geocode && e.geocode.center) {
-                    map.setView(e.geocode.center, 15); // Center map and zoom in
+                    map.setView(e.geocode.center, 15);
                 }
             })
             .addTo(map);
-            // --- END: Add Geocoder Search Control ---
         }
 
         // Convert address to coordinates using Nominatim
@@ -1371,7 +1424,7 @@
             const listElement = document.getElementById('activeIncidentsList');
             if (!listElement) return;
 
-            listElement.innerHTML = ''; // Clear existing list
+            listElement.innerHTML = '';
 
             const activeIncidents = Array.from(liveIncidentsData.values()).filter(inc => inc.currentStatus === 'active');
 
@@ -1383,7 +1436,7 @@
                 return;
             }
 
-            activeIncidents.sort((a, b) => b.timestamp - a.timestamp); // Show newest first
+            activeIncidents.sort((a, b) => b.timestamp - a.timestamp);
 
             activeIncidents.forEach(incident => {
                 const listItem = document.createElement('li');
@@ -1401,15 +1454,46 @@
                 timeSpan.textContent = `Reported: ${new Date(incident.timestamp).toLocaleString()}`;
                 infoDiv.appendChild(timeSpan);
 
+                // Add engagement metrics
+                const metricsDiv = document.createElement('div');
+                metricsDiv.className = 'incident-metrics';
+                metricsDiv.innerHTML = `
+                    <span class="metric likes">👍 ${incident.likes || 0}</span>
+                    <span class="metric comments">💬 ${incident.comments || 0}</span>
+                    <span class="metric shares">🔄 ${incident.shares || 0}</span>
+                `;
+                infoDiv.appendChild(metricsDiv);
+
+                // Add hashtags if available
+                if (incident.hashtags && incident.hashtags.length > 0) {
+                    const hashtagsDiv = document.createElement('div');
+                    hashtagsDiv.className = 'incident-hashtags';
+                    hashtagsDiv.innerHTML = incident.hashtags.map(tag => `<span class="hashtag">${tag}</span>`).join(' ');
+                    infoDiv.appendChild(hashtagsDiv);
+                }
+
                 listItem.appendChild(infoDiv);
 
+                const actionsDiv = document.createElement('div');
+                actionsDiv.className = 'incident-actions';
+
                 const resolveButton = document.createElement('button');
-                resolveButton.className = 'btn-resolve'; // Use specific class from new CSS
+                resolveButton.className = 'btn-resolve';
                 resolveButton.textContent = 'Mark Resolved';
                 resolveButton.onclick = () => {
                     updateIncidentStatus(incident.id, 'resolved');
                 };
-                listItem.appendChild(resolveButton);
+                actionsDiv.appendChild(resolveButton);
+
+                const viewButton = document.createElement('button');
+                viewButton.className = 'btn-view';
+                viewButton.textContent = 'View Post';
+                viewButton.onclick = () => {
+                    window.open(incident.url, '_blank');
+                };
+                actionsDiv.appendChild(viewButton);
+
+                listItem.appendChild(actionsDiv);
 
                 listElement.appendChild(listItem);
             });
@@ -1421,19 +1505,17 @@
                 const coords = await geocodeAddress(incident.location);
                 if (!coords) return;
 
-                // Manage live incident data for stats
                 if (!liveIncidentsData.has(incident.id)) {
                     const newIncidentEntry = { ...incident, currentStatus: 'active' };
                     liveIncidentsData.set(incident.id, newIncidentEntry);
                     dashboardReportStats.totalReportedThisSession++;
                     dashboardReportStats.activeCases++;
                     updateQuickStatsDisplay();
-                    renderHistoryTable(); // Update history table
-                    renderActiveIncidentsList(); // Update active incidents list
+                    renderHistoryTable();
+                    renderActiveIncidentsList();
                 }
                 const incidentEntry = liveIncidentsData.get(incident.id);
 
-                // Create marker with custom popup
                 const marker = L.marker([coords.lat, coords.lng]);
                 const popupContent = `
                     <div class="incident-popup">
@@ -1443,17 +1525,28 @@
                         <p><strong>Time:</strong> ${new Date(incident.timestamp).toLocaleString()}</p>
                         <p><strong>Status:</strong> <span class="incident-status-text ${incidentEntry.currentStatus === 'active' ? 'status-active' : 'status-resolved'}">${incidentEntry.currentStatus === 'active' ? 'Active' : 'Resolved'}</span></p>
                         <p><strong>Details:</strong> ${incident.message}</p>
-                        ${incidentEntry.currentStatus === 'active' ? `<button onclick="updateIncidentStatus('${incident.id}', 'resolved')">Mark Resolved</button>` : `<button onclick="updateIncidentStatus('${incident.id}', 'active')">Mark Active</button>`}
-                        <button onclick="removeIncident('${incident.id}')">Remove Incident</button>
+                        <div class="incident-metrics">
+                            <span class="metric">👍 ${incident.likes || 0} likes</span>
+                            <span class="metric">💬 ${incident.comments || 0} comments</span>
+                            <span class="metric">🔄 ${incident.shares || 0} shares</span>
+                        </div>
+                        ${incident.hashtags && incident.hashtags.length > 0 ? 
+                            `<div class="incident-hashtags">${incident.hashtags.map(tag => `<span class="hashtag">${tag}</span>`).join(' ')}</div>` : 
+                            ''}
+                        <div class="incident-actions">
+                            ${incidentEntry.currentStatus === 'active' ? 
+                                `<button onclick="updateIncidentStatus('${incident.id}', 'resolved')">Mark Resolved</button>` : 
+                                `<button onclick="updateIncidentStatus('${incident.id}', 'active')">Mark Active</button>`}
+                            <button onclick="window.open('${incident.url}', '_blank')">View Post</button>
+                            <button onclick="removeIncident('${incident.id}')">Remove Incident</button>
+                        </div>
                     </div>
                 `;
                 marker.bindPopup(popupContent);
                 
-                // Add to marker cluster
                 markerCluster.addLayer(marker);
                 markers.set(incident.id, marker);
 
-                // Center map on new incident
                 map.setView([coords.lat, coords.lng], 15);
             } catch (error) {
                 console.error('Error adding marker:', error);
@@ -1469,7 +1562,7 @@
             }
         }
 
-        // New function to handle full incident removal including stats
+        // Remove incident
         function removeIncident(incidentId) {
             const incidentEntry = liveIncidentsData.get(incidentId);
             if (incidentEntry) {
@@ -1478,15 +1571,14 @@
                 }
                 liveIncidentsData.delete(incidentId);
                 updateQuickStatsDisplay();
-                renderHistoryTable(); // Update history table
-                renderActiveIncidentsList(); // Update active incidents list
+                renderHistoryTable();
+                renderActiveIncidentsList();
             }
-            removeIncidentMarker(incidentId); // Removes from map
-            // Close any open popup for this marker if needed, though Leaflet might handle this.
+            removeIncidentMarker(incidentId);
             map.closePopup();
         }
 
-        // Update incident marker status
+        // Update incident status
         function updateIncidentStatus(incidentId, newStatus) {
             const marker = markers.get(incidentId);
             const incidentEntry = liveIncidentsData.get(incidentId);
@@ -1501,13 +1593,11 @@
                     dashboardReportStats.activeCases++;
                 }
                 updateQuickStatsDisplay();
-                renderHistoryTable(); // Update history table
-                renderActiveIncidentsList(); // Update active incidents list
+                renderHistoryTable();
+                renderActiveIncidentsList();
 
-                // Update popup content dynamically
                 const popup = marker.getPopup();
                 if (popup) {
-                    // Regenerate popup content to reflect new status and button
                      const newPopupContent = `
                         <div class="incident-popup">
                             <h3>Fire Incident</h3>
@@ -1516,8 +1606,21 @@
                             <p><strong>Time:</strong> ${new Date(incidentEntry.timestamp).toLocaleString()}</p>
                             <p><strong>Status:</strong> <span class="incident-status-text ${incidentEntry.currentStatus === 'active' ? 'status-active' : 'status-resolved'}">${incidentEntry.currentStatus === 'active' ? 'Active' : 'Resolved'}</span></p>
                             <p><strong>Details:</strong> ${incidentEntry.message}</p>
-                            ${incidentEntry.currentStatus === 'active' ? `<button onclick="updateIncidentStatus('${incidentEntry.id}', 'resolved')">Mark Resolved</button>` : `<button onclick="updateIncidentStatus('${incidentEntry.id}', 'active')">Mark Active</button>`}
-                            <button onclick="removeIncident('${incidentEntry.id}')">Remove Incident</button>
+                            <div class="incident-metrics">
+                                <span class="metric">👍 ${incidentEntry.likes || 0} likes</span>
+                                <span class="metric">💬 ${incidentEntry.comments || 0} comments</span>
+                                <span class="metric">🔄 ${incidentEntry.shares || 0} shares</span>
+                            </div>
+                            ${incidentEntry.hashtags && incidentEntry.hashtags.length > 0 ? 
+                                `<div class="incident-hashtags">${incidentEntry.hashtags.map(tag => `<span class="hashtag">${tag}</span>`).join(' ')}</div>` : 
+                                ''}
+                            <div class="incident-actions">
+                                ${incidentEntry.currentStatus === 'active' ? 
+                                    `<button onclick="updateIncidentStatus('${incidentEntry.id}', 'resolved')">Mark Resolved</button>` : 
+                                    `<button onclick="updateIncidentStatus('${incidentEntry.id}', 'active')">Mark Active</button>`}
+                                <button onclick="window.open('${incidentEntry.url}', '_blank')">View Post</button>
+                                <button onclick="removeIncident('${incidentEntry.id}')">Remove Incident</button>
+                            </div>
                         </div>
                     `;
                     popup.setContent(newPopupContent);
@@ -1525,63 +1628,19 @@
             }
         }
 
+        // Initialize dashboard
         document.addEventListener('DOMContentLoaded', async () => {
             try {
-                // Initialize map
                 initMap();
-                updateQuickStatsDisplay(); // Initialize stats display
-                updateApiStatusDisplay('Initializing...', 'var(--warning)'); // Initial API status
-                renderHistoryTable(); // Initial render of history table
-                renderActiveIncidentsList(); // Initial render of active incidents list
+                updateQuickStatsDisplay();
+                updateApiStatusDisplay('Initializing...', 'var(--warning)');
+                renderHistoryTable();
+                renderActiveIncidentsList();
 
-                // Initialize the Facebook scraper with configuration
-                const initialKeywords = getKeywords(); // Get keywords from localStorage
-                const scraper = new FacebookScraper(FB_CONFIG);
+                // Initialize Apify integration
+                await initializeApifyIntegration();
                 
-                // Add event listener for new posts
-                scraper.addEventListener((posts) => {
-                    // Handle new posts here
-                    posts.forEach(post => {
-                        console.log('New post:', post);
-                    });
-                });
-                
-                // Initialize the scraper
-                await scraper.init();
-                
-                // Listen for API status updates from the scraper
-                scraper.addEventListener('scraperApiStatusUpdate', (event) => {
-                    const { status, color } = event.detail;
-                    updateApiStatusDisplay(status, color);
-                });
-                
-                await scraper.initialize();
-                
-                // Start scraping every 5 minutes
-                setInterval(() => scraper.scrapePages(), 300000);
-                
-                // Listen for fire incident events
-                scraper.addEventListener('fireIncidentFound', (event) => {
-                    const { pageName, message, timestamp, location, confidence } = event.detail;
-                    
-                    // Create notification
-                    createNotification('Fire Incident Detected', 
-                        `New incident reported by ${pageName}\nLocation: ${location}\nConfidence: ${confidence}%`,
-                        'warning');
-
-                    // Add incident to map
-                    const incident = {
-                        id: Date.now(), // Unique ID for the incident
-                        source: pageName,
-                        message: message,
-                        timestamp: timestamp,
-                        location: location,
-                        confidence: confidence
-                    };
-                    addIncidentMarker(incident);
-                });
-                
-                console.log('Facebook scraper and map initialized successfully');
+                console.log('Dashboard initialized successfully');
             } catch (error) {
                 console.error('Failed to initialize:', error);
                 createNotification('Error', 'Failed to initialize system', 'error');
@@ -1600,13 +1659,9 @@
 
             menuItems.forEach(item => {
                 item.addEventListener('click', function() {
-                    // Remove active class from all menu items
                     menuItems.forEach(i => i.classList.remove('active'));
-                    
-                    // Add active class to clicked item
                     this.classList.add('active');
                     
-                    // Show selected content
                     const pageId = this.getAttribute('data-page');
                     Object.values(contentSections).forEach(section => {
                         if (section) {
@@ -1618,94 +1673,11 @@
                     if (activeSection) {
                         activeSection.style.display = 'block';
                         
-                        // Refresh map when map tab is selected
                         if (pageId === 'map' && map) {
                             map.invalidateSize();
                         }
                     }
                 });
-            });
-        });
-
-        // Logo handling functionality
-        document.addEventListener('DOMContentLoaded', function() {
-            const logoFile = document.getElementById('logoFile');
-            const currentLogo = document.getElementById('currentLogo');
-            const uploadBtn = document.getElementById('uploadLogo');
-            const resetBtn = document.getElementById('resetLogo');
-            const selectedFileName = document.getElementById('selectedFileName');
-            const defaultLogoPath = 'images/bfp-logo.png';
-
-            // Load saved logo from localStorage if exists
-            const savedLogo = localStorage.getItem('customLogo');
-            if (savedLogo) {
-                currentLogo.src = savedLogo;
-                document.querySelector('.sidebar .logo-container img').src = savedLogo;
-            }
-
-            // Handle file selection
-            logoFile.addEventListener('change', function(e) {
-                const file = e.target.files[0];
-                if (file) {
-                    if (file.size > 5242880) { // 5MB limit
-                        createNotification('Error', 'File size should not exceed 5MB', 'error');
-                        logoFile.value = '';
-                        return;
-                    }
-
-                    const reader = new FileReader();
-                    reader.onload = function(e) {
-                        // Create an image to check dimensions
-                        const img = new Image();
-                        img.onload = function() {
-                            if (img.width > 1000 || img.height > 1000) {
-                                createNotification('Error', 'Image dimensions should not exceed 1000x1000 pixels', 'error');
-                                logoFile.value = '';
-                                return;
-                            }
-                            // Preview the image
-                            currentLogo.src = e.target.result;
-                            uploadBtn.disabled = false;
-                        };
-                        img.src = e.target.result;
-                    };
-                    reader.readAsDataURL(file);
-                    selectedFileName.textContent = file.name;
-                }
-            });
-
-            // Handle logo upload
-            uploadBtn.addEventListener('click', function() {
-                uploadBtn.classList.add('loading');
-                uploadBtn.disabled = true;
-
-                // Simulate upload delay
-                setTimeout(() => {
-                    const newLogoSrc = currentLogo.src;
-                    // Save to localStorage
-                    localStorage.setItem('customLogo', newLogoSrc);
-                    // Update sidebar logo
-                    document.querySelector('.sidebar .logo-container img').src = newLogoSrc;
-
-                    uploadBtn.classList.remove('loading');
-                    createNotification('Success', 'Logo updated successfully', 'success');
-                    selectedFileName.textContent = '';
-                    logoFile.value = '';
-                }, 1000);
-            });
-
-            // Handle reset to default
-            resetBtn.addEventListener('click', function() {
-                // Reset to default logo
-                currentLogo.src = defaultLogoPath;
-                document.querySelector('.sidebar .logo-container img').src = defaultLogoPath;
-                // Clear localStorage
-                localStorage.removeItem('customLogo');
-                // Reset file input
-                logoFile.value = '';
-                selectedFileName.textContent = '';
-                uploadBtn.disabled = true;
-                createNotification('Success', 'Logo reset to default', 'success');
             });
         });
 
@@ -1733,7 +1705,6 @@
                     const lat = position.coords.latitude;
                     const lng = position.coords.longitude;
                     
-                    // Perform reverse geocoding
                     const response = await fetch(`https://nominatim.openstreetmap.org/reverse?format=jsonv2&lat=${lat}&lon=${lng}&accept-language=en`);
                     if (!response.ok) {
                         throw new Error(`Nominatim API error: ${response.status}`);
@@ -1742,7 +1713,6 @@
                     
                     if (data && data.display_name) {
                         let friendlyAddress = data.display_name;
-                        // Attempt to create a more concise address
                         if (data.address) {
                             const city = data.address.city || data.address.town || data.address.village;
                             const state = data.address.state || data.address.county;
@@ -1754,7 +1724,7 @@
                                 friendlyAddress = `${state}, ${country}`;
                             } else if (city && state) {
                                 friendlyAddress = `${city}, ${state}`;
-                            } // Add more combinations as needed or stick to display_name
+                            }
                         }
                         locationElement.textContent = friendlyAddress;
                     } else {
@@ -1774,32 +1744,10 @@
             updateDateTime();
             updateLocation();
             
-            // Update time every second
             setInterval(updateDateTime, 1000);
-            
-            // Update location every 5 minutes
             setInterval(updateLocation, 300000);
 
-            // Initialize Keyword Management
             initKeywordManagement();
-        });
-
-        // Initialize Facebook Authentication
-        const fbAuth = new FacebookAuthHandler({
-            appId: 'YOUR_APP_ID' // Replace with your Facebook App ID
-        });
-
-        // Initialize and mount the Facebook auth UI
-        document.addEventListener('DOMContentLoaded', async () => {
-            await fbAuth.initialize('#fbAuthSidebarContainer');
-            renderHistoryTable(); // Also call here to ensure table is rendered after potential early data hydration (if any)
-
-            // Override the onConnected method to handle post-connection logic
-            fbAuth.onConnected = () => {
-                // Refresh the dashboard or update necessary components
-                console.log('Facebook connected, updating dashboard...');
-                // Add your post-connection logic here
-            };
         });
 
         // Keyword Management Functionality
@@ -1807,12 +1755,12 @@
             const keywordInput = document.getElementById('keywordInput');
             const addKeywordBtn = document.getElementById('addKeywordBtn');
             const keywordList = document.getElementById('keywordList');
-            const defaultKeywords = ['sunog', 'fire', 'nasusunog', 'fire alert']; // Default keywords
+            const defaultKeywords = ['sunog', 'fire', 'nasusunog', 'fire alert'];
 
             let keywords = JSON.parse(localStorage.getItem('bfpKeywords')) || [...defaultKeywords];
 
             function renderKeywords() {
-                keywordList.innerHTML = ''; // Clear existing list
+                keywordList.innerHTML = '';
                 if (keywords.length === 0) {
                     const placeholderItem = document.createElement('li');
                     placeholderItem.textContent = 'No keywords added. Using defaults.';
@@ -1841,9 +1789,8 @@
                     keywords.push(newKeyword);
                     localStorage.setItem('bfpKeywords', JSON.stringify(keywords));
                     renderKeywords();
-                    keywordInput.value = ''; // Clear input
+                    keywordInput.value = '';
                     createNotification('Success', `Keyword "${newKeyword}" added.`, 'success');
-                    // Potentially re-initialize or notify the scraper
                     updateScraperKeywords();
                 } else if (keywords.includes(newKeyword)) {
                     createNotification('Info', `Keyword "${newKeyword}" already exists.`, 'info');
@@ -1857,7 +1804,6 @@
                 localStorage.setItem('bfpKeywords', JSON.stringify(keywords));
                 renderKeywords();
                 createNotification('Success', `Keyword "${removedKeyword}" removed.`, 'success');
-                 // Potentially re-initialize or notify the scraper
                 updateScraperKeywords();
             }
             
@@ -1868,7 +1814,6 @@
                 }
             });
 
-            // Initial render
             renderKeywords();
         }
         
@@ -1877,14 +1822,18 @@
         }
 
         function updateScraperKeywords() {
-            if (scraper) {
-                 scraper.updateKeywords(getKeywords());
-                 console.log('Scraper keywords updated.');
+            // Update keywords in Apify service
+            if (window.apifyService) {
+                const keywords = getKeywords();
+                // Format keywords for search query
+                const searchQuery = keywords.map(keyword => `"${keyword}"`).join(' OR ');
+                window.apifyService.updateSearchQuery(searchQuery);
+                console.log('Scraper search query updated:', searchQuery);
+                createNotification('Success', 'Search query updated successfully', 'success');
             }
         }
 
         function createNotification(title, message, type = 'info') {
-            // Simple notification function - consider a more robust library for production
             const notificationArea = document.getElementById('notificationArea') || createNotificationArea();
             
             const notification = document.createElement('div');
@@ -1893,7 +1842,6 @@
             
             notificationArea.appendChild(notification);
             
-            // Auto-remove after 5 seconds
             setTimeout(() => {
                 notification.style.opacity = '0';
                 setTimeout(() => notification.remove(), 500);
@@ -1915,7 +1863,6 @@
                 document.body.appendChild(area);
             }
             
-            // Add basic styling for notifications if not already present
             if (!document.getElementById('notificationStyles')) {
                 const styles = `
                     .notification {
@@ -1945,14 +1892,13 @@
             const tableBody = document.getElementById('historyTableBody');
             if (!tableBody) return;
 
-            tableBody.innerHTML = ''; // Clear existing rows
+            tableBody.innerHTML = '';
 
             if (liveIncidentsData.size === 0) {
                 tableBody.innerHTML = '<tr><td colspan="5" style="text-align:center; padding: 20px;">No incidents reported in this session yet.</td></tr>';
                 return;
             }
 
-            // Sort incidents by timestamp, most recent first (optional, but good for history)
             const sortedIncidents = Array.from(liveIncidentsData.values()).sort((a, b) => b.timestamp - a.timestamp);
 
             sortedIncidents.forEach(incident => {
@@ -1982,10 +1928,10 @@
             const sortedIncidents = Array.from(liveIncidentsData.values()).sort((a, b) => b.timestamp - a.timestamp);
 
             sortedIncidents.forEach(incident => {
-                const timestamp = new Date(incident.timestamp).toLocaleString().replace(/,/g, ';'); // Replace commas in timestamp to avoid CSV issues
+                const timestamp = new Date(incident.timestamp).toLocaleString().replace(/,/g, ';');
                 const source = incident.source ? `"${incident.source.replace(/"/g, '""')}"` : 'N/A';
                 const location = incident.location ? `"${incident.location.replace(/"/g, '""')}"` : 'N/A';
-                const message = incident.message ? `"${incident.message.replace(/"/g, '""')}"` : 'N/A'; // Escape double quotes in message
+                const message = incident.message ? `"${incident.message.replace(/"/g, '""')}"` : 'N/A';
                 const status = incident.currentStatus || 'N/A';
                 const id = incident.id || 'N/A';
                 const confidence = incident.confidence !== undefined ? incident.confidence + '%' : 'N/A';
@@ -2019,17 +1965,6 @@
             }
         });
 
-        // Script to display admin username
-        document.addEventListener('DOMContentLoaded', function() {
-            const storedUsername = localStorage.getItem('adminUsername');
-            if (storedUsername) {
-                const usernameElement = document.getElementById('adminUsernameDisplay');
-                if (usernameElement) {
-                    usernameElement.textContent = storedUsername;
-                }
-            }
-        });
-
         // Loading screen logic
         document.addEventListener('DOMContentLoaded', function() {
             const loadingOverlay = document.getElementById('loadingOverlay');
@@ -2039,85 +1974,132 @@
                 }
                 localStorage.removeItem('showLoadingScreen');
                 
-                // Hide loading screen after a delay
                 setTimeout(function() {
                     if (loadingOverlay) {
                         loadingOverlay.style.display = 'none';
                     }
-                }, 3000); // 3 seconds delay
+                }, 3000);
             } else {
-                 // Ensure it's hidden if the flag isn't set (e.g., direct navigation)
                 if (loadingOverlay) {
                     loadingOverlay.style.display = 'none';
                 }
             }
         });
 
-        // Enhanced checkLoginState function
-        function checkLoginState() {
-            // Show loading state
-            const loginButton = document.querySelector('.fb-login-button');
-            if (loginButton) {
-                loginButton.classList.add('loading');
-            }
-
-            // Check if FB is initialized
-            if (typeof FB === 'undefined') {
-                console.error('Facebook SDK not loaded');
-                createNotification('Error', 'Facebook SDK not loaded. Please refresh the page.', 'error');
-                return;
-            }
-
-            // Get login status with timeout
-            const statusCheck = new Promise((resolve, reject) => {
-                const timeout = setTimeout(() => {
-                    reject(new Error('Login status check timed out'));
-                }, 10000); // 10 second timeout
-
-                FB.getLoginStatus(function(response) {
-                    clearTimeout(timeout);
-                    resolve(response);
-                });
-            });
-
-            statusCheck
-                .then(response => {
-                    // Handle the response
-                    statusChangeCallback(response);
-                })
-                .catch(error => {
-                    console.error('Login status check failed:', error);
-                    createNotification('Error', 'Failed to check login status. Please try again.', 'error');
-                    updateConnectionStatus(false);
-                })
-                .finally(() => {
-                    // Remove loading state
-                    if (loginButton) {
-                        loginButton.classList.remove('loading');
-                    }
-                });
+        // Add logout function
+        function logout() {
+            localStorage.removeItem('isLoggedIn');
+            localStorage.removeItem('adminUsername');
+            localStorage.removeItem('userEmail');
+            localStorage.removeItem('userId');
+            localStorage.removeItem('showLoadingScreen');
+            
+                window.location.href = "login.html";
         }
 
-        // Add loading state styles
-        const style = document.createElement('style');
-        style.textContent = `
-            .fb-login-button.loading {
-                opacity: 0.7;
-                pointer-events: none;
+        // Add event listener to logout button
+        document.getElementById('logoutButton').addEventListener('click', logout);
+
+        // Check session on page visibility change
+        document.addEventListener('visibilitychange', function() {
+            if (document.visibilityState === 'visible') {
+                const isLoggedIn = localStorage.getItem('isLoggedIn');
+                if (isLoggedIn !== 'true') {
+                    window.location.href = "login.html";
+                }
             }
-            .fb-login-button.loading::after {
-                content: '';
-                display: inline-block;
-                width: 12px;
-                height: 12px;
-                margin-left: 10px;
-                border: 2px solid #fff;
-                border-top-color: transparent;
-                border-radius: 50%;
-                animation: spin 1s linear infinite;
+        });
+    </script>
+    <script type="module">
+        import ApifyService from './js/apify-service.js';
+        
+        // Initialize Apify service
+        const apifyService = new ApifyService();
+        window.apifyService = apifyService; // Make it globally accessible
+        
+        // Update connection status display
+        function updateConnectionStatus(status) {
+            const apiStatusEl = document.getElementById('systemApiStatusValue');
+            const actorStatusEl = document.getElementById('actorStatusValue');
+            const lastRunStatusEl = document.getElementById('lastRunStatusValue');
+            const connectionStatusEl = document.getElementById('connectionStatusValue');
+            const connectionDetailsEl = document.getElementById('connectionDetails');
+
+            if (status.isConnected) {
+                apiStatusEl.textContent = 'Connected';
+                apiStatusEl.style.color = 'var(--success)';
+                
+                actorStatusEl.textContent = status.actorStatus || 'Unknown';
+                actorStatusEl.style.color = status.actorStatus === 'SUCCEEDED' ? 'var(--success)' : 
+                                          status.actorStatus === 'ERROR' ? 'var(--danger)' : 
+                                          'var(--warning)';
+                
+                lastRunStatusEl.textContent = status.lastRunStatus || 'No runs';
+                lastRunStatusEl.style.color = status.lastRunStatus === 'SUCCEEDED' ? 'var(--success)' : 
+                                            status.lastRunStatus === 'ERROR' ? 'var(--danger)' : 
+                                            'var(--warning)';
+                
+                connectionStatusEl.textContent = 'Connected';
+                connectionStatusEl.style.color = 'var(--success)';
+                
+                connectionDetailsEl.textContent = `Last checked: ${new Date(status.lastCheck).toLocaleString()}`;
+            } else {
+                apiStatusEl.textContent = 'Disconnected';
+                apiStatusEl.style.color = 'var(--danger)';
+                
+                actorStatusEl.textContent = 'Error';
+                actorStatusEl.style.color = 'var(--danger)';
+                
+                lastRunStatusEl.textContent = 'Error';
+                lastRunStatusEl.style.color = 'var(--danger)';
+                
+                connectionStatusEl.textContent = 'Disconnected';
+                connectionStatusEl.style.color = 'var(--danger)';
+                
+                connectionDetailsEl.textContent = `Last error: ${status.error || 'Unknown error'}`;
             }
-        `;
-        document.head.appendChild(style);
+        }
+        
+        // Listen for Apify status updates
+        window.addEventListener('apifyStatusUpdate', (event) => {
+            updateConnectionStatus(event.detail);
+        });
+        
+        // Listen for Apify posts
+        window.addEventListener('apifyPostsFound', (event) => {
+            const { posts, runStatus, timestamp } = event.detail;
+            
+            // Process new posts
+            posts.forEach(post => {
+                if (post.confidence >= 70) {
+                    addIncidentMarker({
+                        id: post.id,
+                        type: 'fire',
+                        location: post.location,
+                        message: post.text,
+                        source: post.source,
+                        url: post.url,
+                        timestamp: new Date(post.date),
+                        confidence: post.confidence
+                    });
+                }
+            });
+        });
+        
+        // Listen for Apify errors
+        window.addEventListener('apifyError', (event) => {
+            const { error, timestamp } = event.detail;
+            console.error('Apify error:', error);
+            createNotification('Apify Service Error', error, 'error');
+        });
+        
+        // Start Apify monitoring when dashboard loads
+        document.addEventListener('DOMContentLoaded', () => {
+            apifyService.startMonitoring().catch(error => {
+                console.error('Failed to start Apify monitoring:', error);
+                createNotification('Apify Service Error', 'Failed to start monitoring', 'error');
+            });
+        });
     </script>
 </body>
 </html> 

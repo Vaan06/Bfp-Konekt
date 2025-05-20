@@ -1,13 +1,17 @@
 // Facebook Scraper Configuration
 const FB_SCRAPER_CONFIG = {
     // Facebook App credentials
-    appId: '1539208937059303',
-    appSecret: 'd90ff479968c5a84184d9dacb24d59fc', // Important: See security note below
+    appId: '1328501121552066',
+    appSecret: '',
     displayName: "BFP Konekt Alert",
     contactEmail: "bfpkonek@gmail.com",
     
     // Pages to monitor (add the Facebook pages you want to monitor)
-    pagesToMonitor: [''], // Example: ['somebfppage', 'anotherbfppageID'] - Add Page IDs or usernames
+    pagesToMonitor: [
+        '100069248977961', // BFP Dasmariñas
+        'gocavite',        // Go Cavite
+        'DasmaCityNews'    // Dasmariñas City News
+    ],
     
     // Keywords to detect fire incidents
     fireKeywords: ['sunog', 'fire', 'nasusunog', 'fire alert', ' apoy'],
