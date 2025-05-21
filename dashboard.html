@@ -1145,7 +1145,7 @@
             </div>
             <div class="profile-info">
                 <p id="adminUsernameDisplay">BFPDASMA0001</p>
-                <button class="badge" onclick="window.location.href='login.html'">LOGOUT</button>
+                <button class="badge" id="logoutButton" onclick="window.location.href='login.html'">LOGOUT</button>
             </div>
         </div>
     </div>
@@ -2003,7 +2003,7 @@
         }
 
         // Add event listener to logout button
-        document.getElementById('logoutButton').addEventListener('click', logout);
+        document.querySelector('.badge[onclick*="logout"]')?.addEventListener('click', logout);
 
         // Check session on page visibility change
         document.addEventListener('visibilitychange', function() {
