@@ -1543,7 +1543,7 @@
                                 `<button onclick="updateIncidentStatus('${incident.id}', 'resolved')">Mark Resolved</button>` : 
                                 `<button onclick="updateIncidentStatus('${incident.id}', 'active')">Mark Active</button>`}
                             <button onclick="window.open('${incident.url}', '_blank')">View Post</button>
-                            <button onclick="removeIncident('${incident.id}')">Remove Incident</button>
+                        <button onclick="removeIncident('${incident.id}')">Remove Incident</button>
                         </div>
                     </div>
                 `;
@@ -1624,7 +1624,7 @@
                                     `<button onclick="updateIncidentStatus('${incidentEntry.id}', 'resolved')">Mark Resolved</button>` : 
                                     `<button onclick="updateIncidentStatus('${incidentEntry.id}', 'active')">Mark Active</button>`}
                                 <button onclick="window.open('${incidentEntry.url}', '_blank')">View Post</button>
-                                <button onclick="removeIncident('${incidentEntry.id}')">Remove Incident</button>
+                            <button onclick="removeIncident('${incidentEntry.id}')">Remove Incident</button>
                             </div>
                         </div>
                     `;
@@ -2048,7 +2048,7 @@
                 connectionStatusEl.style.color = 'var(--success)';
                 
                 connectionDetailsEl.textContent = `Last checked: ${new Date(status.lastCheck).toLocaleString()}`;
-            } else {
+                } else {
                 apiStatusEl.textContent = 'Disconnected';
                 apiStatusEl.style.color = 'var(--danger)';
                 
@@ -2077,7 +2077,7 @@
             // Process new posts
             posts.forEach(post => {
                 if (post.confidence >= 70) {
-                    addIncidentMarker({
+                addIncidentMarker({
                         id: post.id,
                         type: 'fire',
                         location: post.location,
@@ -2088,9 +2088,9 @@
                         confidence: post.confidence
                     });
                 }
-            });
-        });
-        
+                    });
+                });
+
         // Listen for Apify errors
         window.addEventListener('apifyError', (event) => {
             const { error, timestamp } = event.detail;
