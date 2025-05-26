@@ -27,9 +27,6 @@
     <!-- Geocoding and Location Libraries -->
     <script src="https://cdn.jsdelivr.net/npm/turf@3.0.14/turf.min.js"></script>
     
-    <!-- Custom NLP Module -->
-    <script src="js/nlp-processor.js"></script>
-
     <!-- Add User Manager Script -->
     <script src="js/user-manager.js"></script>
 
@@ -168,7 +165,7 @@
         /* Dashboard Grid Layout */
         .dashboard-panels {
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            grid-template-columns: 1fr 2.5fr; /* Quick Stats 1x, Active Incidents 2.5x */
             gap: 25px;
             margin: 20px;
             padding: 0;
@@ -403,6 +400,7 @@
             }
 
             .dashboard-panels {
+                grid-template-columns: 1fr;
                 margin: 15px;
                 gap: 15px;
             }
@@ -739,7 +737,7 @@
             list-style: none;
             padding: 0;
             margin: 0;
-            max-height: 300px; /* Adjust as needed, provides scroll for many items */
+            max-height: 500px; /* Increased for more visible items */
             overflow-y: auto;
         }
 
@@ -1089,16 +1087,70 @@
             flex: 1;
             min-width: 100px;
         }
+
+        /* Modal Styles */
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 20001;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            overflow: auto;
+            background-color: rgba(0,0,0,0.4);
+        }
+        .modal-content {
+            background-color: #fff;
+            margin: 5% auto;
+            padding: 30px 30px 20px 30px;
+            border: 1px solid #888;
+            width: 90%;
+            max-width: 500px;
+            border-radius: 12px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.2);
+            position: relative;
+        }
+        .modal-content h2 {
+            margin-top: 0;
+            color: var(--primary);
+            margin-bottom: 20px;
+        }
+        .close {
+            color: #aaa;
+            float: right;
+            font-size: 28px;
+            font-weight: bold;
+            position: absolute;
+            right: 20px;
+            top: 10px;
+            cursor: pointer;
+        }
+        .close:hover,
+        .close:focus {
+            color: var(--danger);
+            text-decoration: none;
+            cursor: pointer;
+        }
+        .btn-system-status-success {
+            background: var(--success) !important;
+            color: #fff !important;
+        }
+        .btn-system-status-danger {
+            background: var(--danger) !important;
+            color: #fff !important;
+        }
     </style>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 </head>
 <body>
     <!-- Add Notification Bell -->
-    <div class="notification-bell" onclick="toggleNotificationPanel()">
+    <!-- <div class="notification-bell" onclick="toggleNotificationPanel()">
         🔔
-    </div>
+    </div> -->
 
     <!-- Add Notification Panel -->
-    <div class="notification-panel" id="notificationPanel">
+    <!-- <div class="notification-panel" id="notificationPanel">
         <div class="notification-header">
             <h3>Verification Requests</h3>
             <span class="notification-count" id="notificationCount">0</span>
@@ -1106,7 +1158,7 @@
         <div class="notification-list" id="notificationList">
             <!-- Notifications will be added here dynamically -->
         </div>
-    </div>
+    </div> -->
 
     <!-- Loading Screen Overlay -->
     <div id="loadingOverlay" style="display: none;">
@@ -1130,13 +1182,13 @@
                 <i>🗺️</i>
                 <span>MAP</span>
             </a>
-            <a class="menu-item" data-page="settings">
+            <a class="menu-item" data-page="keywords">
                 <i>⚙️</i>
-                <span>SETTINGS</span>
+                <span>KEYWORDS MANAGEMENT</span>
             </a>
-            <a class="menu-item" data-page="history">
+            <a class="menu-item" data-page="reports">
                 <i>📜</i>
-                <span>HISTORY</span>
+                <span>REPORTS</span>
             </a>
         </div>
         <div class="profile-section">
@@ -1181,40 +1233,30 @@
                 <div class="panel">
                     <div class="panel-header">Active Incidents</div>
                     <div class="panel-body" id="active-incidents-panel-body">
+                        <div style="margin-bottom: 10px;">
+                            <label for="incidentFilter">Filter Incidents:</label>
+                            <select id="incidentFilter" class="form-control">
+                                <option value="all">All Incidents</option>
+                                <option value="active">Active Only</option>
+                                <option value="resolved">Resolved Only</option>
+                            </select>
+                        </div>
                         <ul id="activeIncidentsList" class="incident-list">
                             <!-- Active incidents will be populated here by JavaScript -->
                             <li class="no-active-incidents">No active incidents at the moment.</li>
                         </ul>
                     </div>
                 </div>
-
-                <!-- System Status Panel -->
-                <div class="panel">
-                    <div class="panel-header">System Status</div>
+            </div>
+            <!-- Analytics Panel -->
+            <div class="panel" style="margin: 20px;">
+                <div class="panel-header">Reports Analytics</div>
                     <div class="panel-body">
-                        <div class="stats-grid">
-                            <div class="stat-item">
-                                <div id="systemApiStatusValue" class="stat-value" style="color: var(--warning);">Connecting...</div>
-                                <div class="stat-label">API Status</div>
+                    <canvas id="reportsAnalyticsChart" style="width:100%;max-width:700px;height:300px;"></canvas>
+                    <div id="reportsAnalyticsSummary" style="margin-top: 20px; color: var(--text-muted);">
+                        Analytics summary will appear here.
                             </div>
-                            <div class="stat-item">
-                                <div id="actorStatusValue" class="stat-value" style="color: var(--warning);">Checking...</div>
-                                <div class="stat-label">Actor Status</div>
                             </div>
-                            <div class="stat-item">
-                                <div id="lastRunStatusValue" class="stat-value" style="color: var(--warning);">-</div>
-                                <div class="stat-label">Last Run</div>
-                            </div>
-                            <div class="stat-item">
-                                <div id="connectionStatusValue" class="stat-value" style="color: var(--warning);">Checking...</div>
-                                <div class="stat-label">Connection</div>
-                            </div>
-                        </div>
-                        <div id="connectionDetails" style="margin-top: 15px; font-size: 0.9rem; color: var(--text-muted);">
-                            Last checked: Never
-                        </div>
-                    </div>
-                </div>
             </div>
         </div>
 
@@ -1226,9 +1268,9 @@
             </div>
         </div>
 
-        <!-- Settings Content -->
-        <div id="settings-content" class="content-body">
-            <h1 class="content-header">Settings</h1>
+        <!-- Keywords Management Content -->
+        <div id="keywords-content" class="content-body">
+            <h1 class="content-header">Keywords Management</h1>
             <div class="dashboard-panels">
                 <!-- Keyword Management Panel -->
                 <div class="panel">
@@ -1253,19 +1295,23 @@
                     <div class="panel-header">System Settings</div>
                     <div class="panel-body">
                         <div class="settings-grid">
+                            <!-- Update the Update Interval dropdown in the System Settings Panel -->
                             <div class="form-group">
                                 <label>Update Interval</label>
-                                <select class="form-control">
-                                    <option>5 minutes</option>
-                                    <option>10 minutes</option>
-                                    <option>15 minutes</option>
+                                <select id="updateIntervalSelect" class="form-control">
+                                    <option value="1">1 minute</option>
+                                    <option value="2">2 minutes</option>
+                                    <option value="5">5 minutes</option>
+                                    <option value="10">10 minutes</option>
+                                    <option value="15">15 minutes</option>
                                 </select>
                             </div>
+                            <!-- Update the Notification Sound dropdown in the System Settings Panel -->
                             <div class="form-group">
                                 <label>Notification Sound</label>
-                                <select class="form-control">
-                                    <option>Enabled</option>
-                                    <option>Disabled</option>
+                                <select id="notificationSoundSelect" class="form-control">
+                                    <option value="enabled">Enabled</option>
+                                    <option value="disabled">Disabled</option>
                                 </select>
                             </div>
                         </div>
@@ -1274,12 +1320,12 @@
             </div>
         </div>
 
-        <!-- History Content -->
-        <div id="history-content" class="content-body">
-            <h1 class="content-header">Incident History (Current Session)</h1>
+        <!-- Reports Content -->
+        <div id="reports-content" class="content-body">
+            <h1 class="content-header">Incident Reports (Current Session)</h1>
             <div class="history-container">
-                <button id="downloadHistoryBtn" class="btn btn-primary">Download History (CSV)</button>
-                <div style="overflow-x: auto;"> <!-- For responsiveness on small screens -->
+                <button id="downloadHistoryBtn" class="btn btn-primary">Download Reports (CSV)</button>
+                <div style="overflow-x: auto;">
                     <table class="history-table">
                         <thead>
                             <tr>
@@ -1291,9 +1337,8 @@
                             </tr>
                         </thead>
                         <tbody id="historyTableBody">
-                            <!-- History items will be populated here by JavaScript -->
                             <tr>
-                                <td colspan="5" style="text-align:center; padding: 20px;">No incidents reported in this session yet.</td>
+                                <td colspan="5" style="text-align:center; padding: 20px;">No reports in this session yet.</td>
                             </tr>
                         </tbody>
                     </table>
@@ -1324,6 +1369,39 @@
             </div>
         </div>
     </div>
+
+    <!-- System Status Modal Popup -->
+    <div id="systemStatusModal" class="modal" style="display:none;">
+        <div class="modal-content">
+            <span class="close" id="closeSystemStatusModal">&times;</span>
+            <h2>System Status</h2>
+            <div class="stats-grid">
+                <div class="stat-item">
+                    <div id="systemApiStatusValue" class="stat-value" style="color: var(--warning);">Connecting...</div>
+                    <div class="stat-label">API Status</div>
+                </div>
+                <div class="stat-item">
+                    <div id="actorStatusValue" class="stat-value" style="color: var(--warning);">Checking...</div>
+                    <div class="stat-label">Actor Status</div>
+                </div>
+                <div class="stat-item">
+                    <div id="lastRunStatusValue" class="stat-value" style="color: var(--warning);">-</div>
+                    <div class="stat-label">Last Run</div>
+                </div>
+                <div class="stat-item">
+                    <div id="connectionStatusValue" class="stat-value" style="color: var(--warning);">Checking...</div>
+                    <div class="stat-label">Connection</div>
+                </div>
+            </div>
+            <div id="connectionDetails" style="margin-top: 15px; font-size: 0.9rem; color: var(--text-muted);">
+                Last checked: Never
+            </div>
+        </div>
+    </div>
+    <button id="openSystemStatusModal" class="btn btn-secondary" style="position:fixed; top:20px; right:20px; z-index:100;">System Status</button>
+
+    <!-- Update audio element for notification sound -->
+    <audio id="notificationSound" src="mixkit-alert-bells-echo-765.wav" preload="auto"></audio>
 
     <script>
         // Initialize user manager
@@ -1427,16 +1505,21 @@
         // Function to render the active incidents list on the dashboard
         function renderActiveIncidentsList() {
             const listElement = document.getElementById('activeIncidentsList');
-            if (!listElement) return;
+            const filterSelect = document.getElementById('incidentFilter');
+            if (!listElement || !filterSelect) return;
 
             listElement.innerHTML = '';
 
-            const activeIncidents = Array.from(liveIncidentsData.values()).filter(inc => inc.currentStatus === 'active');
+            const filter = filterSelect.value;
+            const activeIncidents = Array.from(liveIncidentsData.values()).filter(inc => {
+                if (filter === 'all') return true;
+                return inc.currentStatus === filter;
+            });
 
             if (activeIncidents.length === 0) {
                 const listItem = document.createElement('li');
                 listItem.className = 'no-active-incidents';
-                listItem.textContent = 'No active incidents at the moment.';
+                listItem.textContent = 'No incidents match the current filter.';
                 listElement.appendChild(listItem);
                 return;
             }
@@ -1459,7 +1542,19 @@
                 timeSpan.textContent = `Reported: ${new Date(incident.timestamp).toLocaleString()}`;
                 infoDiv.appendChild(timeSpan);
 
-                // Add engagement metrics
+                const contentDiv = document.createElement('div');
+                contentDiv.className = 'incident-content';
+                contentDiv.textContent = incident.message || incident.text || 'No content available.';
+                contentDiv.style.margin = '8px 0';
+                infoDiv.appendChild(contentDiv);
+
+                if (incident.url) {
+                    const permalinkDiv = document.createElement('div');
+                    permalinkDiv.className = 'incident-permalink';
+                    permalinkDiv.innerHTML = `<a href="${incident.url}" target="_blank" style="color: var(--primary); text-decoration: underline;">View Post</a>`;
+                    infoDiv.appendChild(permalinkDiv);
+                }
+
                 const metricsDiv = document.createElement('div');
                 metricsDiv.className = 'incident-metrics';
                 metricsDiv.innerHTML = `
@@ -1469,7 +1564,6 @@
                 `;
                 infoDiv.appendChild(metricsDiv);
 
-                // Add hashtags if available
                 if (incident.hashtags && incident.hashtags.length > 0) {
                     const hashtagsDiv = document.createElement('div');
                     hashtagsDiv.className = 'incident-hashtags';
@@ -1641,9 +1735,6 @@
                 updateApiStatusDisplay('Initializing...', 'var(--warning)');
                 renderHistoryTable();
                 renderActiveIncidentsList();
-
-                // Initialize Apify integration
-                await initializeApifyIntegration();
                 
                 console.log('Dashboard initialized successfully');
             } catch (error) {
@@ -1658,8 +1749,8 @@
             const contentSections = {
                 'dashboard': document.getElementById('dashboard-content'),
                 'map': document.getElementById('map-content'),
-                'settings': document.getElementById('settings-content'),
-                'history': document.getElementById('history-content')
+                'keywords': document.getElementById('keywords-content'),
+                'reports': document.getElementById('reports-content')
             };
 
             menuItems.forEach(item => {
@@ -2014,6 +2105,250 @@
                 }
             }
         });
+
+        function toggleNotificationPanel() {
+            const panel = document.getElementById('notificationPanel');
+            if (panel) {
+                panel.classList.toggle('active');
+            }
+        }
+        window.toggleNotificationPanel = toggleNotificationPanel;
+
+        // Modal open/close logic
+        document.addEventListener('DOMContentLoaded', function() {
+            const modal = document.getElementById('systemStatusModal');
+            const btn = document.getElementById('openSystemStatusModal');
+            const span = document.getElementById('closeSystemStatusModal');
+            if (btn && modal && span) {
+                btn.onclick = function() {
+                    modal.style.display = 'block';
+                }
+                span.onclick = function() {
+                    modal.style.display = 'none';
+                }
+                window.onclick = function(event) {
+                    if (event.target == modal) {
+                        modal.style.display = 'none';
+                    }
+                }
+            }
+        });
+
+        let reportsAnalyticsChart;
+
+        function getReportsPerDay(incidents, days = 7) {
+            const today = new Date();
+            const dateLabels = [];
+            const counts = [];
+            for (let i = days - 1; i >= 0; i--) {
+                const d = new Date(today);
+                d.setDate(today.getDate() - i);
+                const label = d.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+                dateLabels.push(label);
+                counts.push(0);
+            }
+            incidents.forEach(incident => {
+                const date = new Date(incident.timestamp);
+                for (let i = 0; i < days; i++) {
+                    const d = new Date(today);
+                    d.setDate(today.getDate() - (days - 1 - i));
+                    if (
+                        date.getDate() === d.getDate() &&
+                        date.getMonth() === d.getMonth() &&
+                        date.getFullYear() === d.getFullYear()
+                    ) {
+                        counts[i]++;
+                    }
+                }
+            });
+            return { dateLabels, counts };
+        }
+
+        function updateReportsAnalyticsChart() {
+            const incidents = Array.from(liveIncidentsData.values());
+            const { dateLabels, counts } = getReportsPerDay(incidents, 7);
+            const ctx = document.getElementById('reportsAnalyticsChart').getContext('2d');
+            if (reportsAnalyticsChart) reportsAnalyticsChart.destroy();
+            reportsAnalyticsChart = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: dateLabels,
+                    datasets: [{
+                        label: 'Reports per Day (Last 7 Days)',
+                        data: counts,
+                        fill: false,
+                        borderColor: 'rgba(255, 140, 0, 1)',
+                        backgroundColor: 'rgba(255, 140, 0, 0.2)',
+                        tension: 0.2,
+                        pointRadius: 4,
+                        pointBackgroundColor: 'rgba(255, 140, 0, 1)'
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    plugins: {
+                        legend: { display: true }
+                    },
+                    scales: {
+                        y: { beginAtZero: true }
+                    }
+                }
+            });
+        }
+
+        // Update chart on dashboard load and whenever incidents change
+        document.addEventListener('DOMContentLoaded', function() {
+            updateReportsAnalyticsChart();
+        });
+        // Also update after adding/removing incidents
+        function refreshAllIncidentDisplays() {
+            updateQuickStatsDisplay();
+            renderHistoryTable();
+            renderActiveIncidentsList();
+            updateReportsAnalyticsChart();
+        }
+        // Replace calls to updateQuickStatsDisplay/renderHistoryTable/renderActiveIncidentsList with refreshAllIncidentDisplays if you want all to update together
+
+        function updateConnectionStatus(status) {
+            const apiStatusEl = document.getElementById('systemApiStatusValue');
+            const actorStatusEl = document.getElementById('actorStatusValue');
+            const lastRunStatusEl = document.getElementById('lastRunStatusValue');
+            const connectionStatusEl = document.getElementById('connectionStatusValue');
+            const connectionDetailsEl = document.getElementById('connectionDetails');
+            const systemStatusBtn = document.getElementById('openSystemStatusModal');
+
+            // Helper to title case a word
+            function toTitleCase(str) {
+                return str.replace(/\w\S*/g, (txt) => txt.charAt(0).toUpperCase() + txt.substr(1).toLowerCase());
+            }
+
+            if (status.isConnected) {
+                apiStatusEl.textContent = toTitleCase('connected');
+                apiStatusEl.style.color = 'var(--success)';
+                actorStatusEl.textContent = toTitleCase((status.actorStatus || 'Unknown').replace('SUCCEEDED', 'Succeeded').replace('FAILED', 'Failed'));
+                actorStatusEl.style.color = status.actorStatus === 'SUCCEEDED' ? 'var(--success)' : 
+                                          status.actorStatus === 'ERROR' ? 'var(--danger)' : 
+                                          'var(--warning)';
+                lastRunStatusEl.textContent = toTitleCase((status.lastRunStatus || 'No Runs').replace('SUCCEEDED', 'Succeeded').replace('FAILED', 'Failed'));
+                lastRunStatusEl.style.color = status.lastRunStatus === 'SUCCEEDED' ? 'var(--success)' : 
+                                            status.lastRunStatus === 'ERROR' ? 'var(--danger)' : 
+                                            'var(--warning)';
+                connectionStatusEl.textContent = toTitleCase('connected');
+                connectionStatusEl.style.color = 'var(--success)';
+                connectionDetailsEl.textContent = `Last checked: ${new Date(status.lastCheck).toLocaleString()}`;
+                if (systemStatusBtn) {
+                    systemStatusBtn.classList.remove('btn-system-status-danger');
+                    systemStatusBtn.classList.add('btn-system-status-success');
+                }
+            } else {
+                apiStatusEl.textContent = toTitleCase('disconnected');
+                apiStatusEl.style.color = 'var(--danger)';
+                actorStatusEl.textContent = toTitleCase('error');
+                actorStatusEl.style.color = 'var(--danger)';
+                lastRunStatusEl.textContent = toTitleCase('error');
+                lastRunStatusEl.style.color = 'var(--danger)';
+                connectionStatusEl.textContent = toTitleCase('disconnected');
+                connectionStatusEl.style.color = 'var(--danger)';
+                connectionDetailsEl.textContent = `Last error: ${status.error || 'Unknown error'}`;
+                if (systemStatusBtn) {
+                    systemStatusBtn.classList.remove('btn-system-status-success');
+                    systemStatusBtn.classList.add('btn-system-status-danger');
+                }
+            }
+        }
+
+        let apifyPollingInterval = null;
+        let apifyPollingMinutes = 1; // default
+
+        function setApifyPollingInterval(minutes) {
+            if (apifyPollingInterval) clearInterval(apifyPollingInterval);
+            apifyPollingMinutes = minutes;
+            // Removed call to window.apifyService.setPollingInterval
+            apifyPollingInterval = setInterval(() => {
+                if (window.apifyService) window.apifyService.fetchAndProcessData();
+            }, minutes * 60 * 1000);
+        }
+
+        // On page load, set up the dropdown and polling
+        document.addEventListener('DOMContentLoaded', function() {
+            const select = document.getElementById('updateIntervalSelect');
+            if (!select) return;
+
+            // Load saved interval or default to 1 minute
+            const saved = localStorage.getItem('bfpUpdateInterval');
+            if (saved) {
+                select.value = saved;
+                setApifyPollingInterval(Number(saved));
+            } else {
+                setApifyPollingInterval(1);
+            }
+
+            select.addEventListener('change', function() {
+                const minutes = Number(this.value);
+                localStorage.setItem('bfpUpdateInterval', minutes);
+                setApifyPollingInterval(minutes);
+                createNotification('Success', `Update interval set to ${minutes} minute(s).`, 'success');
+            });
+        });
+
+        let notificationSoundEnabled = true; // default
+
+        function setNotificationSound(enabled) {
+            notificationSoundEnabled = enabled;
+            localStorage.setItem('bfpNotificationSound', enabled ? 'enabled' : 'disabled');
+            createNotification('Success', `Notification sound ${enabled ? 'enabled' : 'disabled'}.`, 'success');
+        }
+
+        // On page load, set up the dropdown and sound setting
+        document.addEventListener('DOMContentLoaded', function() {
+            const select = document.getElementById('notificationSoundSelect');
+            if (!select) return;
+
+            // Load saved setting or default to enabled
+            const saved = localStorage.getItem('bfpNotificationSound');
+            if (saved) {
+                select.value = saved;
+                setNotificationSound(saved === 'enabled');
+            } else {
+                setNotificationSound(true);
+            }
+
+            select.addEventListener('change', function() {
+                setNotificationSound(this.value === 'enabled');
+            });
+        });
+
+        // Update the Apify posts event listener to play sound if enabled
+        window.addEventListener('apifyPostsFound', (event) => {
+            const { posts, runStatus, timestamp } = event.detail;
+            // Process new posts
+            posts.forEach(post => {
+                addIncidentMarker({
+                    id: post.id,
+                    type: 'fire',
+                    location: post.location,
+                    message: post.text,
+                    source: post.source,
+                    url: post.url,
+                    timestamp: new Date(post.date),
+                    confidence: post.confidence
+                });
+            });
+
+            // Play sound if notification sound is enabled
+            if (notificationSoundEnabled) {
+                const sound = document.getElementById('notificationSound');
+                if (sound) sound.play();
+            }
+        });
+
+        // Add event listener for the filter dropdown
+        document.addEventListener('DOMContentLoaded', function() {
+            const filterSelect = document.getElementById('incidentFilter');
+            if (filterSelect) {
+                filterSelect.addEventListener('change', renderActiveIncidentsList);
+            }
+        });
     </script>
     <script type="module">
         import ApifyService from './js/apify-service.js';
@@ -2022,6 +2357,12 @@
         const apifyService = new ApifyService();
         window.apifyService = apifyService; // Make it globally accessible
         
+        // Helper to convert status to proper case
+        function toProperCase(str) {
+            if (!str) return '';
+            return str.charAt(0).toUpperCase() + str.slice(1).toLowerCase();
+        }
+        
         // Update connection status display
         function updateConnectionStatus(status) {
             const apiStatusEl = document.getElementById('systemApiStatusValue');
@@ -2029,39 +2370,40 @@
             const lastRunStatusEl = document.getElementById('lastRunStatusValue');
             const connectionStatusEl = document.getElementById('connectionStatusValue');
             const connectionDetailsEl = document.getElementById('connectionDetails');
+            const systemStatusBtn = document.getElementById('openSystemStatusModal');
 
             if (status.isConnected) {
-                apiStatusEl.textContent = 'Connected';
+                apiStatusEl.textContent = toProperCase('connected');
                 apiStatusEl.style.color = 'var(--success)';
-                
-                actorStatusEl.textContent = status.actorStatus || 'Unknown';
+                actorStatusEl.textContent = toProperCase(status.actorStatus || 'Unknown');
                 actorStatusEl.style.color = status.actorStatus === 'SUCCEEDED' ? 'var(--success)' : 
                                           status.actorStatus === 'ERROR' ? 'var(--danger)' : 
                                           'var(--warning)';
-                
-                lastRunStatusEl.textContent = status.lastRunStatus || 'No runs';
+                lastRunStatusEl.textContent = toProperCase(status.lastRunStatus || 'No runs');
                 lastRunStatusEl.style.color = status.lastRunStatus === 'SUCCEEDED' ? 'var(--success)' : 
                                             status.lastRunStatus === 'ERROR' ? 'var(--danger)' : 
                                             'var(--warning)';
-                
-                connectionStatusEl.textContent = 'Connected';
+                connectionStatusEl.textContent = toProperCase('connected');
                 connectionStatusEl.style.color = 'var(--success)';
-                
                 connectionDetailsEl.textContent = `Last checked: ${new Date(status.lastCheck).toLocaleString()}`;
+                if (systemStatusBtn) {
+                    systemStatusBtn.classList.remove('btn-system-status-danger');
+                    systemStatusBtn.classList.add('btn-system-status-success');
+                }
                 } else {
-                apiStatusEl.textContent = 'Disconnected';
+                apiStatusEl.textContent = toProperCase('disconnected');
                 apiStatusEl.style.color = 'var(--danger)';
-                
-                actorStatusEl.textContent = 'Error';
+                actorStatusEl.textContent = toProperCase('error');
                 actorStatusEl.style.color = 'var(--danger)';
-                
-                lastRunStatusEl.textContent = 'Error';
+                lastRunStatusEl.textContent = toProperCase('error');
                 lastRunStatusEl.style.color = 'var(--danger)';
-                
-                connectionStatusEl.textContent = 'Disconnected';
+                connectionStatusEl.textContent = toProperCase('disconnected');
                 connectionStatusEl.style.color = 'var(--danger)';
-                
                 connectionDetailsEl.textContent = `Last error: ${status.error || 'Unknown error'}`;
+                if (systemStatusBtn) {
+                    systemStatusBtn.classList.remove('btn-system-status-success');
+                    systemStatusBtn.classList.add('btn-system-status-danger');
+                }
             }
         }
         
@@ -2073,10 +2415,8 @@
         // Listen for Apify posts
         window.addEventListener('apifyPostsFound', (event) => {
             const { posts, runStatus, timestamp } = event.detail;
-            
             // Process new posts
             posts.forEach(post => {
-                if (post.confidence >= 70) {
                 addIncidentMarker({
                         id: post.id,
                         type: 'fire',
@@ -2087,8 +2427,13 @@
                         timestamp: new Date(post.date),
                         confidence: post.confidence
                     });
-                }
-                    });
+            });
+
+            // Play sound if notification sound is enabled
+            if (notificationSoundEnabled) {
+                const sound = document.getElementById('notificationSound');
+                if (sound) sound.play();
+            }
                 });
 
         // Listen for Apify errors
@@ -2107,4 +2452,4 @@
         });
     </script>
 </body>
-</html> 
+</html>

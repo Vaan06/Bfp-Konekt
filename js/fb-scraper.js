@@ -492,6 +492,7 @@ class FacebookScraper extends EventTarget {
     async createIncident(data, type = 'post') {
         try {
             const location = await this.extractLocation(data);
+            console.log('Extracted location:', location, data.message);
             if (!location && this.config.locationDetection.required) return null;
 
             const incident = {
@@ -1079,6 +1080,50 @@ class FacebookScraper extends EventTarget {
         if (callbacks) {
             callbacks.forEach(callback => callback(event));
         }
+    }
+
+    processPosts(posts) {
+        // Deduplicate by permalink and content
+        const seen = new Set();
+        const uniquePosts = [];
+        for (const post of posts) {
+            const permalink = post.permalink || post.url || '';
+            const content = post.content || post.text || '';
+            const key = `${permalink}::${content}`;
+            if (!seen.has(key)) {
+                seen.add(key);
+                uniquePosts.push(post);
+            }
+        }
+        return uniquePosts.map(post => {
+            const location = this.extractLocation(post.content || post.text || '');
+            console.log('Extracted location:', location, post.content || post.text || '');
+            const confidence = this.calculateConfidence(post.content || post.text || '');
+            console.log('Latest post confidence:', confidence, post.content || post.text || '');
+            const timestamp = post.date ? new Date(post.date) : new Date();
+            return {
+                id: post.permalink || post.url || `post_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
+                text: post.content || post.text || '',
+                message: post.content || post.text || '',
+                date: timestamp,
+                url: post.permalink || post.url || '',
+                location: location,
+                confidence: confidence,
+                source: 'Facebook',
+                hashtags: (post.content || '').match(/#\\w+/g) || [],
+                likes: post.like_count || post.likes || 0,
+                comments: post.comment_count || post.comments || 0,
+                shares: post.share_count || post.shares || 0
+            };
+        }).filter(post => post.confidence >= 70);
+    }
+
+    async startMonitoring() {
+        this.monitoringInterval = setInterval(async () => {
+            await this.checkConnection();
+            await this.startNewRun();
+            await this.fetchAndProcessData();
+        }, 2 * 60 * 1000); // Every 2 minutes
     }
 }
 
